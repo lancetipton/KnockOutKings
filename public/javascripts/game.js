@@ -9,8 +9,14 @@ function preload() {
 
 }
 
+function killZone(){
+    this.top = 800 + 250;
+    this.bottom = -(800 - 250);
+    this.left = -(600 - 250);
+    this.right = 600 + 250;
+}
 
-
+var killZone = new killZone();
 
 
 function Player(){
@@ -26,14 +32,21 @@ function Player(){
     this.jumpOne = false;
     this.jumpTwo = false;
     this.lastFrame = 0;
-    this.countDown = 0;
+    this.lives = 0;
 };
+
+
+
+var lifesPerPerson = 2;
 
 var player1 = new Player();
 player1.playerName = 'Player 1'
+player1.lives = lifesPerPerson;
 
 var player2 = new Player();
 player2.playerName = 'Player 2'
+player2.lives = lifesPerPerson;
+
 
 
 function create() {
@@ -79,11 +92,11 @@ function create() {
     //  Player1 physics properties. Give the little guy a slight bounce.
     player1.guy.body.bounce.setTo(0.1, 0.1);
     player1.guy.body.gravity.y = 200;
-    player1.guy.body.collideWorldBounds = true;
+    // player1.guy.body.collideWorldBounds = true;
 
     player2.guy.body.bounce.setTo(0.1, 0.1);
     player2.guy.body.gravity.y = 200;
-    player2.guy.body.collideWorldBounds = true;
+    // player2.guy.body.collideWorldBounds = true;
 
     //  Our two animations, walking left and right, next number is frames per second
 
@@ -105,8 +118,8 @@ function create() {
 
 
 
-    player1.hud = game.add.text(16, 16, 'Player1: 0', { fontSize: '10px', fill: '#000' });
-    player2.hud = game.add.text(430, 16, 'Player2: 0', { fontSize: '10px', fill: '#000' });
+    player1.hud = game.add.text(16, 16, player1.playerName + ': 0  Lives: ' + player1.lives, { fontSize: '10px', fill: '#000' });
+    player2.hud = game.add.text(430, 16, player2.playerName +': 0 Lives: ' + player2.lives, { fontSize: '10px', fill: '#000' });
 
     //  Our controls.
     p1Left = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
@@ -125,6 +138,7 @@ function create() {
 }
 
 function update() {
+
 
     resetVelocity(player1);
     resetVelocity(player2);
@@ -303,6 +317,7 @@ function update() {
         };
 
         if(touching(player2.guy, player1.guy)){
+
             player1.hurt = true;
         };
     };
@@ -315,15 +330,11 @@ function update() {
     };
 
 
-// Game Methods
-    if (player1.dead || player2.dead){
-        gameEnd();
-    }
-    else{
-        playerHurt(player2, player1);
-        playerHurt(player1, player2);
+    playerHurt(player2, player1);
+    playerHurt(player1, player2);
 
-    };
+    playerDead(player1);
+    playerDead(player2);
 
 };
 
@@ -360,7 +371,7 @@ function playerHurt(pice1, pice2){
 
         pice1.lastFrame = 28;
 
-        pice1.hud.text = pice1.playerName + ": " + Math.floor(((pice1.percent * 2) / 10));
+        pice1.hud.text = pice1.playerName + ": " + Math.floor((pice1.percent * 2) / 10) + "  Lives: "  + pice1.lives;
         pice1.guy.animations.play('hurt');
 
 
@@ -388,6 +399,35 @@ function checkFace(pice1){
 };
 
 
+function playerDead(pice){
+    if (pice.lives != 0){
+        var posX = pice.guy.body.x;
+        var posY = pice.guy.body.y;
+        if(posX < killZone.left|| posX > killZone.right || posY > killZone.top || posY < killZone.bottom){
+            pice.guy.kill();
+
+            pice.guy.revive();
+            pice.guy.body.x = 250;
+            pice.guy.body.y = game.world.height -400;
+            pice.percent = 0;
+            pice.lives -= 1;
+            pice.lastFrame = 0;
+            pice.hud.text = pice.playerName + ": " + 0 + "  Lives: "  + pice.lives;
+
+        };
+    }
+    else {
+        restartGame();
+    }
+
+};
+
+function restartGame() {
+    player1.lives = lifesPerPerson;
+    player1.lastFrame = 0;
+    player2.lives = lifesPerPerson;
+    player2.lastFrame = 0;
+    game.state.start(game.state.current);
 
 
-
+}
