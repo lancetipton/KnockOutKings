@@ -35,7 +35,74 @@ function Player(){
     this.lives = 0;
 };
 
+Player.prototype.moveLeft = function() {
+        this.isLeft = true;
+        this.guy.body.velocity.x = -150;
+        this.guy.animations.play('walk');
+};
 
+Player.prototype.moveRight = function() {
+        this.isLeft = false;
+        this.guy.body.velocity.x = 150;
+        this.guy.animations.play('walk');
+};
+
+Player.prototype.superKick = function(otherPlayer) {
+        this.attackPercent = this.attacks['superKick'];
+        this.guy.animations.play('superKick');
+        this.lastFrame = 34;
+        var player = this;
+        setTimeout(function() {
+            if(touching(player, otherPlayer)){
+                otherPlayer.hurt = true;
+            };
+        }, 100);
+};
+
+Player.prototype.jump = function() {
+        if(!this.jumpOne){
+            this.guy.frame = 13;
+            this.guy.body.velocity.y = -300;
+            this.lastFrame = 13;
+            this.jumpOne = true;
+        }
+        else if(this.jumpOne && !this.jumpTwo){
+            this.guy.frame = 13;
+            this.guy.body.velocity.y = -300;
+            this.lastFrame = 13;
+            this.jumpTwo = true;
+        };
+};
+
+Player.prototype.punch = function(otherPlayer) {
+        this.attackPercent = this.attacks['punch'];
+
+        this.guy.animations.play('punch');
+        var player = this;
+        if(touching(player, otherPlayer)){
+            otherPlayer.hurt = true;
+        };
+};
+
+Player.prototype.kick = function(otherPlayer) {
+        this.attackPercent = this.attacks['kick'];
+
+        if (this.guy.body.touching.down){
+            this.guy.animations.play('kick');
+        }
+        else {
+            this.guy.animations.play('airKick');
+            this.lastFrame = 35;
+
+            setTimeout(function(){
+                this.lastFrame = 13;
+            }, 200)
+        };
+        var player = this;
+        if(touching(player, otherPlayer)){
+            otherPlayer.hurt = true;
+        };
+};
 
 var lifesPerPerson = 2;
 
@@ -101,20 +168,21 @@ function create() {
     //  Our two animations, walking left and right, next number is frames per second
 
 
-    player1.guy.animations.add('p1Walk', [4, 5, 6, 7, 8, 9, 10,11], 10, true);
-    player1.guy.animations.add('p1Punch', [18], 10, true);
-    player1.guy.animations.add('p1Kick', [30], 10, true);
-    player1.guy.animations.add('p1AirKick', [35], 10, true);
-    player1.guy.animations.add('p1SuperKick', [31, 32, 33, 34], 10, false);
+    player1.guy.animations.add('walk', [4, 5, 6, 7, 8, 9, 10,11], 10, true);
+    player1.guy.animations.add('punch', [18], 10, true);
+    player1.guy.animations.add('kick', [30], 10, true);
+    player1.guy.animations.add('airKick', [35], 10, true);
+    player1.guy.animations.add('superKick', [31, 32, 33, 34], 10, false);
     player1.guy.animations.add('hurt', [27, 28], 10, true);
     player1.guy.animations.add('die', [22, 23, 24, 25, 26], 10, true);
 
-    player2.guy.animations.add('p2Walk', [4, 5, 6, 7, 8, 9, 10,11], 10, true);
-    player2.guy.animations.add('p2Punch', [18], 10, true);
-    player2.guy.animations.add('p2Kick', [30], 10, true);
+    player2.guy.animations.add('walk', [4, 5, 6, 7, 8, 9, 10,11], 10, true);
+    player2.guy.animations.add('punch', [18], 10, true);
+    player2.guy.animations.add('kick', [30], 10, true);
+    player2.guy.animations.add('airKick', [35], 10, true);
+    player2.guy.animations.add('superKick', [31, 32, 33, 34], 10, false);
     player2.guy.animations.add('hurt', [27, 28], 10, true);
     player2.guy.animations.add('die', [22, 23, 24, 25, 26], 10, true);
-    player2.guy.animations.add('p2SuperKick', [31, 32, 33, 34], 10, false);
 
 
 
@@ -142,6 +210,8 @@ function update() {
 
     resetVelocity(player1);
     resetVelocity(player2);
+    checkFace(player1);
+    checkFace(player2);
 
     //  Collide the player1 and the stars with the platforms
     game.physics.arcade.collide(player1.guy, platforms);
@@ -155,83 +225,34 @@ function update() {
         player2.guy.frame = player2.lastFrame;
     };
 
-    checkFace(player1);
-    checkFace(player2);
 
+    // Player 1 movement:
     if (p1Left.isDown){
-        player1.isLeft = true;
-        player1.guy.body.velocity.x = -150;
-        player1.guy.animations.play('p1Walk');
+        player1.moveLeft();
     }
 
     else if (p1Right.isDown){
-        player1.isLeft = false;
-        player1.guy.body.velocity.x = 150;
-        player1.guy.animations.play('p1Walk');
+        player1.moveRight();
     }
 
     else if (p1SuperKick.isDown){
-        player1.attackPercent = player1.attacks['superKick'];
-        player1.guy.animations.play('p1SuperKick');
-        player1.lastFrame = 34;
-
-        if(touching(player1.guy, player2.guy)){
-            player2.hurt = true;
-        };
+        player1.superKick(player2);
     }
     else{
         player1.guy.animations.stop();
         player1.guy.frame = player1.lastFrame;
-
     };
 
     if (p1Jump.isDown){
-        if(!player1.jumpOne){
-            player1.guy.frame = 13;
-            player1.guy.body.velocity.y = -300;
-            player1.lastFrame = 13;
-            player1.jumpOne = true;
-        }
-        else if(player1.jumpOne && !player1.jumpTwo){
-            player1.guy.frame = 13;
-            player1.guy.body.velocity.y = -300;
-            player1.lastFrame = 13;
-            player1.jumpTwo = true;
-        };
-
+        player1.jump();
     };
 
     if (p1Punch.isDown){
-
-        player1.attackPercent = player1.attacks['punch'];
-
-            player1.guy.animations.play('p1Punch');
-
-        if(touching(player1.guy, player2.guy)){
-            player2.hurt = true;
-        };
+        player1.punch(player2);
     }
 
     else if (p1Kick.isDown){
-
-         player1.attackPercent = player1.attacks['kick'];
-
-        if (player1.guy.body.touching.down){
-            player1.guy.animations.play('p1Kick');
-        }
-        else {
-
-            player1.guy.animations.play('p1AirKick');
-            player1.lastFrame = 35;
-
-            setTimeout(function(){
-                player1.lastFrame = 13;
-            }, 200)
-        };
-
-        if(touching(player1.guy, player2.guy)){
-            player2.hurt = true;
-        };
+        player1.kick(player2);
     };
 
 
@@ -242,84 +263,34 @@ function update() {
     };
 
 
-// Player 2 movement:
+    // Player 2 movement:
 
     if (p2Left.isDown){
-        player2.isLeft = true;
-        player2.guy.body.velocity.x = -150;
-        player2.guy.animations.play('p2Walk');
+        player2.moveLeft();
     }
 
     else if (p2Right.isDown){
-        player2.isLeft = false;
-        player2.guy.body.velocity.x = 150;
-        player2.guy.animations.play('p2Walk');
+        player2.moveRight();
     }
 
     else if (p2SuperKick.isDown){
-        player2.attackPercent = player2.attacks['superKick'];
-        player2.guy.animations.play('p2SuperKick');
-        player2.lastFrame = 34;
-
-        if(touching(player2.guy, player1.guy)){
-            player1.hurt = true;
-        };
+        player2.superKick(player1);
     }
     else{
-
         player2.guy.animations.stop();
         player2.guy.frame = player2.lastFrame;
-
     };
 
     if (p2Jump.isDown){
-        if(!player2.jumpOne){
-            player2.guy.frame = 13;
-            player2.guy.body.velocity.y = -300;
-            player2.lastFrame = 13;
-            player2.jumpOne = true;
-        }
-        else if(player2.jumpOne && !player2.jumpTwo){
-            player2.guy.frame = 13;
-            player2.guy.body.velocity.y = -300;
-            player2.lastFrame = 13;
-            player2.jumpTwo = true;
-        };
-
+        player2.jump();
     };
 
     if (p2Punch.isDown){
-
-        player2.attackPercent = player2.attacks['punch'];
-
-            player2.guy.animations.play('p2Punch');
-
-        if(touching(player2.guy, player1.guy)){
-            player1.hurt = true;
-        };
+        player2.punch(player1);
     }
 
     else if (p2Kick.isDown){
-
-         player2.attackPercent = player2.attacks['kick'];
-
-        if (player2.guy.body.touching.down){
-            player2.guy.animations.play('p2Kick');
-        }
-        else {
-
-            player2.guy.animations.play('p2AirKick');
-            player2.lastFrame = 35;
-
-            setTimeout(function(){
-                player2.lastFrame = 13;
-            }, 200)
-        };
-
-        if(touching(player2.guy, player1.guy)){
-
-            player1.hurt = true;
-        };
+        player2.kick(player1);
     };
 
 
@@ -339,17 +310,14 @@ function update() {
 };
 
 
-
-
-
 function resetVelocity(pice1){
         if(pice1.hurt == false)
         pice1.guy.body.velocity.x = 0
 };
 
 function touching(pice1, pice2){
-    if (pice1.body.x  <= (pice2.body.x + 64) &&  pice2.body.x <= (pice1.body.x + 64)
-            && pice1.body.y  <= (pice2.body.y + 64) &&  pice2.body.y <= (pice1.body.y + 64) ) {
+    if (pice1.guy.body.x  <= (pice2.guy.body.x + 64) &&  pice2.guy.body.x <= (pice1.guy.body.x + 64)
+            && pice1.guy.body.y  <= (pice2.guy.body.y + 64) &&  pice2.guy.body.y <= (pice1.guy.body.y + 64) ) {
         return true;
     };
 };
