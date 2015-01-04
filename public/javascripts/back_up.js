@@ -9,8 +9,6 @@ function preload() {
 
 }
 
-allPlayers = [];
-
 function killZone(){
     this.top = 800 + 250;
     this.bottom = -(800 - 250);
@@ -26,6 +24,7 @@ function Player(){
     this.percent = 1;
     this.isLeft = false;
     this.guy = "";
+    this.controls = "";
     this.hurt = false;
     this.hud = '';
     this.attacks = {punch: 1, kick: 1, superPuch: 2, superKick: 2};
@@ -48,18 +47,15 @@ Player.prototype.moveRight = function() {
         this.guy.animations.play('walk');
 };
 
-Player.prototype.superKick = function() {
+Player.prototype.superKick = function(otherPlayer) {
         this.attackPercent = this.attacks['superKick'];
         this.guy.animations.play('superKick');
         this.lastFrame = 34;
         var player = this;
-
-        for(var i = 0; i < allPlayers.length; i++){
-
-            if(player.playerName != allPlayers[i].playerName && touching(player, allPlayers[i])){
-                playerHurt(allPlayers[i], player);
-            };
+        if(touching(player, otherPlayer)){
+            otherPlayer.hurt = true;
         };
+
 };
 
 Player.prototype.jump = function() {
@@ -77,21 +73,17 @@ Player.prototype.jump = function() {
         };
 };
 
-Player.prototype.punch = function() {
+Player.prototype.punch = function(otherPlayer) {
         this.attackPercent = this.attacks['punch'];
 
         this.guy.animations.play('punch');
         var player = this;
-
-        for(var i = 0; i < allPlayers.length; i++){
-
-            if(player.playerName != allPlayers[i].playerName && touching(player, allPlayers[i])){
-                playerHurt(allPlayers[i], player);
-            };
+        if(touching(player, otherPlayer)){
+            otherPlayer.hurt = true;
         };
 };
 
-Player.prototype.kick = function() {
+Player.prototype.kick = function(otherPlayer) {
         this.attackPercent = this.attacks['kick'];
 
         if (this.guy.body.touching.down){
@@ -106,11 +98,8 @@ Player.prototype.kick = function() {
             }, 200)
         };
         var player = this;
-        for(var i = 0; i < allPlayers.length; i++){
-
-            if(player.playerName != allPlayers[i].playerName && touching(player, allPlayers[i])){
-                playerHurt(allPlayers[i], player);
-            };
+        if(touching(player, otherPlayer)){
+            otherPlayer.hurt = true;
         };
 };
 
@@ -124,20 +113,11 @@ var player2 = new Player();
 player2.playerName = 'Player 2'
 player2.lives = lifesPerPerson;
 
-allPlayers.push(player1);
-allPlayers.push(player2);
+allPlayers = [player1, player2];
+
 
 
 function create() {
-
-    Player.prototype.keyLeft = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
-    Player.prototype.keyRight = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
-    Player.prototype.keyJump = game.input.keyboard.addKey(Phaser.Keyboard.UP);
-    Player.prototype.keyPunch = game.input.keyboard.addKey(Phaser.Keyboard.ALT);
-    Player.prototype.keyKick = game.input.keyboard.addKey(Phaser.Keyboard.M);
-    Player.prototype.keySuperKick = game.input.keyboard.addKey(Phaser.Keyboard.N);
-
-
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -210,17 +190,20 @@ function create() {
     player1.hud = game.add.text(16, 16, player1.playerName + ': 0  Lives: ' + player1.lives, { fontSize: '10px', fill: '#000' });
     player2.hud = game.add.text(430, 16, player2.playerName +': 0 Lives: ' + player2.lives, { fontSize: '10px', fill: '#000' });
 
+    //  Our controls.
+    p1Left = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+    p1Right = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+    p1Jump = game.input.keyboard.addKey(Phaser.Keyboard.UP);
+    p1Punch = game.input.keyboard.addKey(Phaser.Keyboard.ALT);
+    p1Kick = game.input.keyboard.addKey(Phaser.Keyboard.M);
+    p1SuperKick = game.input.keyboard.addKey(Phaser.Keyboard.N);
 
-
-// set Player 2 Controls =
-
-    player2.keyLeft = game.input.keyboard.addKey(Phaser.Keyboard.A);
-    player2.keyRight = game.input.keyboard.addKey(Phaser.Keyboard.D);
-    player2.keyJump = game.input.keyboard.addKey(Phaser.Keyboard.W);
-    player2.keyPunch = game.input.keyboard.addKey(Phaser.Keyboard.F);
-    player2.keyKick = game.input.keyboard.addKey(Phaser.Keyboard.G);
-    player2.keySuperKick = game.input.keyboard.addKey(Phaser.Keyboard.R);
-
+    p2Left = game.input.keyboard.addKey(Phaser.Keyboard.A);
+    p2Right = game.input.keyboard.addKey(Phaser.Keyboard.D);
+    p2Jump = game.input.keyboard.addKey(Phaser.Keyboard.W);
+    p2Punch = game.input.keyboard.addKey(Phaser.Keyboard.F);
+    p2Kick = game.input.keyboard.addKey(Phaser.Keyboard.G);
+    p2SuperKick = game.input.keyboard.addKey(Phaser.Keyboard.R);
 }
 
 function update() {
@@ -228,61 +211,105 @@ function update() {
     for(var i = 0; i < allPlayers.length; i++){
         var currentPlayer = allPlayers[i];
 
-        resetVelocity(currentPlayer);
+        resetVelocity(player1);
+        resetVelocity(player2);
+        checkFace(player1);
+        checkFace(player2);
 
-        checkFace(currentPlayer);
+        //  Collide the player1 and the stars with the platforms
+        game.physics.arcade.collide(player1.guy, platforms);
+        game.physics.arcade.collide(player2.guy, platforms);
 
+        if (!player1.guy.body.touching.down){
+            player1.guy.frame = player1.lastFrame;
 
-        //  Collide the currentPlayer and the stars with the platforms
-        game.physics.arcade.collide(currentPlayer.guy, platforms);
-
-
-        if (!currentPlayer.guy.body.touching.down){
-            currentPlayer.guy.frame = currentPlayer.lastFrame;
-
+        };
+        if (!player2.guy.body.touching.down){
+            player2.guy.frame = player2.lastFrame;
         };
 
 
-        // Player movement:
-        if (currentPlayer.keyLeft.isDown){
-            currentPlayer.moveLeft();
+        // Player 1 movement:
+        if (p1Left.isDown){
+            player1.moveLeft();
         }
 
-        else if (currentPlayer.keyRight.isDown){
-            currentPlayer.moveRight();
+        else if (p1Right.isDown){
+            player1.moveRight();
         }
 
-        else if (currentPlayer.keySuperKick.isDown){
-            currentPlayer.superKick();
+        else if (p1SuperKick.isDown){
+            player1.superKick(player2);
         }
         else{
-            currentPlayer.guy.animations.stop();
-            currentPlayer.guy.frame = currentPlayer.lastFrame;
+            player1.guy.animations.stop();
+            player1.guy.frame = player1.lastFrame;
         };
 
-        if (currentPlayer.keyJump.isDown){
-            currentPlayer.jump();
+        if (p1Jump.isDown){
+            player1.jump();
         };
 
-        if (currentPlayer.keyPunch.isDown){
-            currentPlayer.punch();
+        if (p1Punch.isDown){
+            player1.punch(player2);
         }
 
-        else if (currentPlayer.keyKick.isDown){
-            currentPlayer.kick();
+        else if (p1Kick.isDown){
+            player1.kick(player2);
         };
 
 
-        if (currentPlayer.guy.body.touching.down){
-            currentPlayer.jumpOne = false;
-            currentPlayer.jumpTwo = false;
-            currentPlayer.lastFrame = 0;
+        if (player1.guy.body.touching.down){
+            player1.jumpOne = false;
+            player1.jumpTwo = false;
+            player1.lastFrame = 0;
         };
 
-        playerDead(currentPlayer);
-    };
+
+        // Player 2 movement:
+
+        if (p2Left.isDown){
+            player2.moveLeft();
+        }
+
+        else if (p2Right.isDown){
+            player2.moveRight();
+        }
+
+        else if (p2SuperKick.isDown){
+            player2.superKick(player1);
+        }
+        else{
+            player2.guy.animations.stop();
+            player2.guy.frame = player2.lastFrame;
+        };
+
+        if (p2Jump.isDown){
+            player2.jump();
+        };
+
+        if (p2Punch.isDown){
+            player2.punch(player1);
+        }
+
+        else if (p2Kick.isDown){
+            player2.kick(player1);
+        };
 
 
+        if (player2.guy.body.touching.down){
+            player2.jumpOne = false;
+            player2.jumpTwo = false;
+            player2.lastFrame = 0;
+        };
+
+
+        playerHurt(player2, player1);
+        playerHurt(player1, player2);
+
+        playerDead(player1);
+        playerDead(player2);
+    }
 };
 
 
@@ -298,36 +325,37 @@ function touching(pice1, pice2){
     };
 };
 
-function playerHurt(hurtPlayer, otherPlayer){
+function playerHurt(pice1, pice2){
 
-        hurtPlayer.guy.allowGravity = false;
+    if (pice1.hurt){
 
-        if (otherPlayer.isLeft){
-            hurtPlayer.guy.body.velocity.setTo (-(hurtPlayer.percent * otherPlayer.attackPercent), -(hurtPlayer.percent * otherPlayer.attackPercent));
+        checkFace(pice1)
+
+        pice1.guy.allowGravity = false;
+
+        if (pice2.isLeft){
+            pice1.guy.body.velocity.setTo (-(pice1.percent * pice2.attackPercent), -(pice1.percent * pice2.attackPercent));
         }
         else {
-            hurtPlayer.guy.body.velocity.setTo ((hurtPlayer.percent * otherPlayer.attackPercent), -(hurtPlayer.percent * otherPlayer.attackPercent));
+            pice1.guy.body.velocity.setTo ((pice1.percent * pice2.attackPercent), -(pice1.percent * pice2.attackPercent));
         }
 
-        hurtPlayer.lastFrame = 28;
+        pice1.lastFrame = 28;
 
-        hurtPlayer.hud.text = hurtPlayer.playerName + ": " + Math.floor((hurtPlayer.percent * 2) / 10) + "  Lives: "  + hurtPlayer.lives;
-        hurtPlayer.guy.animations.play('hurt');
-
-        resetPlayerMovement(hurtPlayer);
-
-};
+        pice1.hud.text = pice1.playerName + ": " + Math.floor((pice1.percent * 2) / 10) + "  Lives: "  + pice1.lives;
+        pice1.guy.animations.play('hurt');
 
 
-function resetPlayerMovement(hurtPlayer){
         setTimeout(function() {
-            hurtPlayer.percent += 1
-            hurtPlayer.guy.body.velocity.x = 0;
-            hurtPlayer.guy.body.velocity.y = 0;
-            hurtPlayer.guy.allowGravity = true;
-            hurtPlayer.hurt = false;
+            pice1.percent += 1
+            pice1.guy.body.velocity.x = 0;
+            pice1.guy.body.velocity.y = 0;
+            pice1.guy.allowGravity = true;
+            pice1.hurt = false;
 
-        }, (hurtPlayer.percent * 2) );
+        }, (pice1.percent * 2) );
+
+    };
 };
 
 
