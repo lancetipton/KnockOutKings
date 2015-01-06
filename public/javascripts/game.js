@@ -96,7 +96,16 @@ Player.prototype.jump = function() {
 };
 
 Player.prototype.duck = function() {
+
+    if(this.isJumping){
+        this.guy.body.velocity.y += 1.5;
+    }
+    else{
+        this.guy.animations.play('duck');
+        this.isDown = true;
+    };
 };
+
 
 Player.prototype.punch = function() {
         this.attackPercent = this.attacks['punch'];
@@ -206,8 +215,10 @@ Player.prototype.allKeysUp = function (){
 }
 
 Player.prototype.resetVelocity = function (){
-        if(this.hurt == false)
-        this.guy.body.velocity.x = 0
+    if(this.hurt == false){
+        this.guy.body.velocity.x = 0;
+        this.guy.body.velocity.y = 0;
+    };
 };
 
 Player.prototype.touching = function (otherPlayer){
@@ -231,6 +242,36 @@ Player.prototype.buildAnimations = function(){
 
 }
 
+Player.prototype.falling = function(){
+    if (this.guy.body.touching.down){
+        this.jumpCount = 0;
+    }
+    else{
+        this.lastFrame = 13;
+    };
+};
+
+
+Player.prototype.checkMovement = function(){
+            this.keyLeft.onDown.add(moveLeft.bind(this), this);
+            this.keyRight.onDown.add(moveRight.bind(this), this);
+            this.keySuperKick.onDown.add(superKick.bind(this), this);
+            this.keySuperPunch.onDown.add(superPunch.bind(this), this);
+            this.keyPunch.onDown.add(punch.bind(this), this);
+            this.keyKick.onDown.add(kick.bind(this), this);
+
+
+            if(this.keyDuck.isDown){
+                this.isDown = true;
+            };
+            this.keyDuck.onDown.add(duck.bind(this), this);
+
+
+            if(this.keyJump.isDown){
+                this.isJumping = true;
+            };
+            this.keyJump.onDown.add(jumpCheck.bind(this), this);
+}
 
 var lifesPerPerson = 2;
 var player1 = new Player('guy');
@@ -262,65 +303,24 @@ function update() {
         //  Collide the currentPlayer and the stars with the platforms
         game.physics.arcade.collide(currentPlayer.guy, platforms);
 
+        if (currentPlayer.hurt == false){
+            currentPlayer.falling();
+            currentPlayer.checkMovement();
+        };
 
         if (!currentPlayer.guy.body.touching.down){
             currentPlayer.guy.frame = currentPlayer.lastFrame;
         };
 
-        if (currentPlayer.hurt == false){
-
-            currentPlayer.keyLeft.onDown.add(moveLeft.bind(currentPlayer), this)
-            currentPlayer.keyRight.onDown.add(moveRight.bind(currentPlayer), this)
-            currentPlayer.keySuperKick.onDown.add(superKick.bind(currentPlayer), this)
-            currentPlayer.keySuperPunch.onDown.add(superPunch.bind(currentPlayer), this)
-
-           if (currentPlayer.keyDuck.isDown){
-                if(currentPlayer.isJumping){
-                    currentPlayer.guy.body.velocity.y -= -30;
-                }
-                else{
-                    currentPlayer.guy.frame = 3
-                    currentPlayer.isDown = true;
-                };
-            }
-
-
-            if (currentPlayer.keyDuck.isUP){
-                currentPlayer.guy.frame = 0
-                currentPlayer.isDown = false;
-            }
-
-            // to set up player double jump
-            if(currentPlayer.keyJump.isDown){
-                currentPlayer.isJumping = true;
-            }
-            currentPlayer.keyJump.onDown.add(jumpCheck.bind(currentPlayer), this)
-
-            if (currentPlayer.keyPunch.isDown){
-                currentPlayer.punch();
-            }
-
-            else if (currentPlayer.keyKick.isDown){
-                currentPlayer.kick();
-            }
-
-            if (currentPlayer.guy.body.touching.down){
-                currentPlayer.jumpCount = 0;
-            }
-
-            else{
-                currentPlayer.lastFrame = 13;
-            };
-
-        };
-
-        if(currentPlayer.playerDead()){
-            restartGame();
-        }
-
         if (currentPlayer.allKeysUp()){
             currentPlayer.resetVelocity(currentPlayer);
             currentPlayer.guy.frame = 0
+        };
+
+
+
+        if(currentPlayer.playerDead()){
+            restartGame();
         };
 
     };
@@ -423,7 +423,7 @@ function checkFace(pice1){
     };
 };
 
-jumpCheck = function(){
+function jumpCheck(){
             if(this.isJumping){
                if (this.jumpCount < 2){
                     this.jump();
@@ -440,6 +440,17 @@ moveLeft = function(){
 moveRight = function(){
     this.moveRight();
 };
+duck = function(){
+    this.duck();
+};
+
+kick = function(){
+    this.kick();
+};
+punch = function(){
+    this.punch();
+};
+
 superKick = function(){
     this.superKick();
 };
