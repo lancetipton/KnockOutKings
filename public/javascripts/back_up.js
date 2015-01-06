@@ -208,8 +208,6 @@ function create() {
 
 function update() {
 
-    for(var i = 0; i < allPlayers.length; i++){
-        var currentPlayer = allPlayers[i];
 
         resetVelocity(player1);
         resetVelocity(player2);
@@ -309,7 +307,6 @@ function update() {
 
         playerDead(player1);
         playerDead(player2);
-    }
 };
 
 
