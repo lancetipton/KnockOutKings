@@ -196,7 +196,7 @@ Player.prototype.playerDead = function(){
 };
 
 Player.prototype.allKeysUp = function (){
-    if(this.keyLeft.isUp && this.keyRight.isUp && this.keyJump.isUp && this.guy.body.touching.down){
+    if(this.keyLeft.isUp && this.keyRight.isUp && this.keyJump.isUp && this.guy.body.touching.down && this.keyKick.isUp && this.keySuperKick.isUp && this.keyPunch.isUp && this.keySuperPunch.isUp){
         return true;
     }
 
@@ -224,7 +224,7 @@ Player.prototype.buildAnimations = function(){
     this.guy.animations.add('punch', [18], 10, true);
     this.guy.animations.add('kick', [30], 10, true);
     this.guy.animations.add('airKick', [35], 10, true);
-    this.guy.animations.add('superKick', [31, 32, 33, 34], 10, false);
+    this.guy.animations.add('superKick', [31, 32, 33, 34], 10, true);
     this.guy.animations.add('superPunch', [19, 20, 21], 10, true);
     this.guy.animations.add('hurt', [27, 28], 10, true);
     this.guy.animations.add('die', [22, 23, 24, 25, 26], 10, true);
@@ -268,25 +268,11 @@ function update() {
         };
 
         if (currentPlayer.hurt == false){
-            // Player movement:
-            if (currentPlayer.keyLeft.isDown){
-                currentPlayer.moveLeft();
-            }
 
-            else if (currentPlayer.keyRight.isDown){
-                currentPlayer.moveRight();
-            }
-
-            else if (currentPlayer.keySuperKick.isDown){
-                currentPlayer.superKick();
-            }
-            else if (currentPlayer.keySuperPunch.isDown){
-                currentPlayer.superPunch();
-            }
-            else{
-                currentPlayer.guy.animations.stop();
-                currentPlayer.guy.frame = currentPlayer.lastFrame;
-            };
+            currentPlayer.keyLeft.onDown.add(moveLeft.bind(currentPlayer), this)
+            currentPlayer.keyRight.onDown.add(moveRight.bind(currentPlayer), this)
+            currentPlayer.keySuperKick.onDown.add(superKick.bind(currentPlayer), this)
+            currentPlayer.keySuperPunch.onDown.add(superPunch.bind(currentPlayer), this)
 
            if (currentPlayer.keyDuck.isDown){
                 if(currentPlayer.isJumping){
@@ -319,7 +305,6 @@ function update() {
             }
 
             if (currentPlayer.guy.body.touching.down){
-                currentPlayer.lastFrame = 0;
                 currentPlayer.jumpCount = 0;
             }
 
@@ -335,6 +320,7 @@ function update() {
 
         if (currentPlayer.allKeysUp()){
             currentPlayer.resetVelocity(currentPlayer);
+            currentPlayer.guy.frame = 0
         };
 
     };
@@ -448,3 +434,15 @@ jumpCheck = function(){
 };
 
 
+moveLeft = function(){
+    this.moveLeft();
+};
+moveRight = function(){
+    this.moveRight();
+};
+superKick = function(){
+    this.superKick();
+};
+superPunch = function(){
+    this.superPunch();
+}
