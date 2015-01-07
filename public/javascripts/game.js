@@ -31,7 +31,7 @@ function Player(persona){
     this.guy = "";
     this.hurt = false;
     this.hud = '';
-    this.attacks = {punch: 1, kick: 1, jumpKick: 3, superPuch: 2, superKick: 2};
+    this.attacks = {punch: 1, kick: 1, airKick: 3, superPunch: 2, superKick: 2};
     this.attackPercent ='';
     this.jumpCount = 0;
     this.isJumping = true;
@@ -52,6 +52,42 @@ Player.prototype.moveRight = function() {
         this.guy.animations.play('walk');
 };
 
+Player.prototype.punch = function() {
+        this.attackPercent = this.attacks['punch'];
+
+        this.guy.animations.play('punch');
+        var player = this;
+
+        for(var i = 0; i < allPlayers.length; i++){
+
+            if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
+                allPlayers[i].hurt = true;
+               attackPlayer(this, allPlayers[i]);
+            };
+        };
+};
+
+Player.prototype.kick = function() {
+    if(!this.guy.body.touching.down == true){
+        this.attackPercent = this.attacks['airKick'];
+        this.guy.animations.play('airKick');
+    }
+    else{
+        this.attackPercent = this.attacks['kick'];
+        this.guy.animations.play('kick');
+    };
+
+    var player = this;
+    for(var i = 0; i < allPlayers.length; i++){
+
+    if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
+            allPlayers[i].hurt = true;
+            attackPlayer(this, allPlayers[i]);
+        };
+    };
+};
+
+
 Player.prototype.superKick = function() {
     if(this.guy.frame != 13){
         this.attackPercent = this.attacks['superKick'];
@@ -62,7 +98,7 @@ Player.prototype.superKick = function() {
 
             if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
                 allPlayers[i].hurt = true;
-               this.hitOtherPlayer(allPlayers[i]);
+               attackPlayer(this, allPlayers[i]);
 
             };
         };
@@ -79,7 +115,7 @@ Player.prototype.superPunch = function() {
 
             if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
                 allPlayers[i].hurt = true;
-               this.hitOtherPlayer(allPlayers[i]);
+               attackPlayer(this, allPlayers[i]);
             };
         };
     };
@@ -102,68 +138,6 @@ Player.prototype.down = function() {
         }
         this.guy.body.velocity.y += 1.5;
     }
-};
-
-
-Player.prototype.punch = function() {
-        this.attackPercent = this.attacks['punch'];
-
-        this.guy.animations.play('punch');
-        var player = this;
-
-        for(var i = 0; i < allPlayers.length; i++){
-
-            if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
-                allPlayers[i].hurt = true;
-               this.hitOtherPlayer(allPlayers[i]);
-            };
-        };
-};
-
-Player.prototype.kick = function() {
-    if(!this.guy.body.touching.down == true){
-        this.attackPercent = this.attacks['airKick'];
-        this.guy.animations.play('airKick');
-    }
-    else{
-        this.attackPercent = this.attacks['kick'];
-        this.guy.animations.play('kick');
-    };
-
-    var player = this;
-    for(var i = 0; i < allPlayers.length; i++){
-
-    if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
-            allPlayers[i].hurt = true;
-            this.hitOtherPlayer(allPlayers[i]);
-        };
-    };
-};
-
-Player.prototype.hitOtherPlayer = function(otherPlayer) {
-        checkFace(otherPlayer)
-
-        otherPlayer.guy.allowGravity = false;
-        otherPlayer.guy.body.y -= 0.1;
-        if (this.isLeft){
-            otherPlayer.guy.body.velocity.setTo (-(otherPlayer.percent * this.attackPercent), -(otherPlayer.percent * this.attackPercent));
-        }
-        else {
-            otherPlayer.guy.body.velocity.setTo ((otherPlayer.percent * this.attackPercent), -(otherPlayer.percent * this.attackPercent));
-        }
-
-        otherPlayer.hud.text = otherPlayer.playerName + ": " + Math.floor((otherPlayer.percent * 2) / 10) + "  Lives: "  + otherPlayer.lives;
-        otherPlayer.guy.animations.play('hurt');
-
-
-        setTimeout(function() {
-            otherPlayer.percent += 1
-            otherPlayer.guy.body.velocity.x = 0;
-            otherPlayer.guy.body.velocity.y = 0;
-            otherPlayer.guy.allowGravity = true;
-            otherPlayer.hurt = false;
-
-        }, (otherPlayer.percent * 2) );
 };
 
 Player.prototype.playerDead = function(){
@@ -223,7 +197,7 @@ Player.prototype.buildAnimations = function(){
     this.guy.animations.add('airKick', [35], 10, true);
     this.guy.animations.add('superKick', [31, 32, 33, 34], 10, true);
     this.guy.animations.add('superPunch', [19, 20, 21], 10, true);
-    this.guy.animations.add('hurt', [27, 28], 10, true);
+    this.guy.animations.add('hurt', [27, 28], 10, false);
     this.guy.animations.add('die', [22, 23, 24, 25, 26], 10, true);
 
 }
@@ -236,7 +210,7 @@ Player.prototype.falling = function(){
 
 
 Player.prototype.checkMovement = function(){
-    if (this.allKeysUp()){
+    if (this.allKeysUp() && this.hurt == false){
         this.resetVelocity(this);
         this.guy.frame = 0
     };
@@ -429,4 +403,48 @@ superKick = function(){
 };
 superPunch = function(){
     this.superPunch();
+}
+
+attackPlayer = function(attackingPlayer, hurtPlayer){
+
+        checkFace(hurtPlayer)
+
+        hurtPlayer.guy.allowGravity = false;
+
+        if (attackingPlayer.isLeft){
+            hurtPlayer.isLeft = false;
+            hurtPlayer.guy.body.velocity.setTo (-(hurtPlayer.percent * 1.5), -(hurtPlayer.percent * 3));
+        }
+        else {
+            hurtPlayer.isLeft = true;
+            hurtPlayer.guy.body.velocity.setTo ((hurtPlayer.percent * 1.5), -(hurtPlayer.percent * 3));
+        }
+
+        hurtPlayer.guy.animations.play('hurt');
+
+        updateHud(hurtPlayer);
+
+        setTimeout(function() {
+            hurtPlayer.percent += (attackingPlayer.attackPercent/ 150)
+            hurtPlayer.guy.body.velocity.x = 0;
+            hurtPlayer.guy.body.velocity.y = 0;
+            hurtPlayer.guy.allowGravity = true;
+            hurtPlayer.hurt = false;
+
+        },hurtWaitTimeout(hurtPlayer));
+
+};
+
+hurtWaitTimeout = function(hurtPlayer){
+    if(hurtPlayer.percent < 50 ){
+        return 200
+    }
+    else {
+        return hurtPlayer.percent * 4
+    };
+}
+
+updateHud = function(player){
+    player.hud.text = player.playerName + ": " + Math.round(player.percent)  + "  Lives: "  + player.lives;
+
 }
