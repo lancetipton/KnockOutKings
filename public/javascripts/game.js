@@ -41,15 +41,19 @@ function Player(persona){
 };
 
 Player.prototype.moveLeft = function() {
-        this.isLeft = true;
-        this.guy.body.velocity.x = -150;
+    if(this.guy.body.touching.down){
         this.guy.animations.play('walk');
+    };
+    this.isLeft = true;
+    this.guy.body.velocity.x = -150;
 };
 
 Player.prototype.moveRight = function() {
-        this.isLeft = false;
-        this.guy.body.velocity.x = 150;
+    if(this.guy.body.touching.down){
         this.guy.animations.play('walk');
+    };
+    this.isLeft = false;
+    this.guy.body.velocity.x = 150;
 };
 
 Player.prototype.punch = function() {
@@ -68,10 +72,17 @@ Player.prototype.punch = function() {
 };
 
 Player.prototype.kick = function() {
+
     if(!this.guy.body.touching.down == true){
-        this.attackPercent = this.attacks['airKick'];
         this.guy.animations.play('airKick');
+        this.attackPercent = this.attacks['airKick'];
+
+        player = this
+        setTimeout(function(){
+                player.guy.animations.play('jump');
+        }, 300);
     }
+
     else{
         this.attackPercent = this.attacks['kick'];
         this.guy.animations.play('kick');
@@ -89,7 +100,7 @@ Player.prototype.kick = function() {
 
 
 Player.prototype.superKick = function() {
-    if(this.guy.frame != 13){
+    if(this.guy.body.touching.down){
         this.attackPercent = this.attacks['superKick'];
         this.guy.animations.play('superKick');
         var player = this;
@@ -106,7 +117,7 @@ Player.prototype.superKick = function() {
 };
 
 Player.prototype.superPunch = function() {
-    if(this.guy.frame != 13){
+    if(this.guy.body.touching.down){
         this.attackPercent = this.attacks['superPunch'];
         this.guy.animations.play('superPunch');
         var player = this;
@@ -145,14 +156,18 @@ Player.prototype.playerDead = function(){
         var posX = this.guy.body.x;
         var posY = this.guy.body.y;
         if(posX < killZone.left|| posX > killZone.right || posY > killZone.top || posY < killZone.bottom){
-            this.guy.kill();
 
-            this.guy.revive();
-            this.guy.body.x = 250;
-            this.guy.body.y = game.world.height -400;
+            this.guy.kill();
             this.percent = 0;
             this.lives -= 1;
             this.hud.text = this.playerName + ": " + 0 + "  Lives: "  + this.lives;
+            this.guy.allowGravity = false;
+            this.resetVelocity();
+            this.guy.revive();
+            this.guy.body.x = 400;
+            this.guy.body.y = game.world.height -600;
+            this.guy.allowGravity = true;
+            this.guy.animations.play('stand');
 
         };
         return false;
@@ -188,9 +203,9 @@ Player.prototype.touching = function (otherPlayer){
 };
 
 Player.prototype.buildAnimations = function(){
-
+    this.guy.animations.add('stand', [0], 10, true);
     this.guy.animations.add('walk', [4, 5, 6, 7, 8, 9, 10,11], 10, true);
-    this.guy.animations.add('jump', [13], 10, true);
+    this.guy.animations.add('jump', [14, 13, 12, 13], 5, false);
     this.guy.animations.add('down', [3], 10, true);
     this.guy.animations.add('punch', [18], 10, true);
     this.guy.animations.add('kick', [30], 10, true);
@@ -394,6 +409,7 @@ down = function(){
 kick = function(){
     this.kick();
 };
+
 punch = function(){
     this.punch();
 };
