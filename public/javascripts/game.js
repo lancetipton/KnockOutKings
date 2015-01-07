@@ -34,10 +34,10 @@ function Player(persona){
     this.attacks = {punch: 1, kick: 1, jumpKick: 3, superPuch: 2, superKick: 2};
     this.attackPercent ='';
     this.jumpCount = 0;
-    this.isJumping = false;
+    this.isJumping = true;
     this.isDown = false;
-    this.lastFrame = 0;
     this.lives = 0;
+    this.lastFrame = 0
 };
 
 Player.prototype.moveLeft = function() {
@@ -56,7 +56,6 @@ Player.prototype.superKick = function() {
     if(this.guy.frame != 13){
         this.attackPercent = this.attacks['superKick'];
         this.guy.animations.play('superKick');
-        this.lastFrame = 34;
         var player = this;
 
         for(var i = 0; i < allPlayers.length; i++){
@@ -74,7 +73,6 @@ Player.prototype.superPunch = function() {
     if(this.guy.frame != 13){
         this.attackPercent = this.attacks['superPunch'];
         this.guy.animations.play('superPunch');
-        this.lastFrame = 34;
         var player = this;
 
         for(var i = 0; i < allPlayers.length; i++){
@@ -89,21 +87,21 @@ Player.prototype.superPunch = function() {
 
 
 Player.prototype.jump = function() {
-            this.guy.frame = 13;
-            this.guy.body.velocity.y = -300;
-            this.lastFrame = 13;
-            this.isJumping = false;
+    this.guy.body.velocity.y = -300;
+    this.guy.animations.play('jump');
 };
 
-Player.prototype.duck = function() {
-
-    if(this.isJumping){
-        this.guy.body.velocity.y += 1.5;
+Player.prototype.down = function() {
+    if(this.guy.body.touching.down){
+        this.guy.animations.play('down');
+        this.isDown = true;
     }
     else{
-        this.guy.animations.play('duck');
-        this.isDown = true;
-    };
+        if(this.guy.body.velocity.y > 300){
+            this.guy.body.velocity.y = 200
+        }
+        this.guy.body.velocity.y += 1.5;
+    }
 };
 
 
@@ -123,32 +121,23 @@ Player.prototype.punch = function() {
 };
 
 Player.prototype.kick = function() {
-    if (this.isJumping == true){
-        this.attackPercent = this.attacks['jumpKick'];
+    if(!this.guy.body.touching.down == true){
+        this.attackPercent = this.attacks['airKick'];
+        this.guy.animations.play('airKick');
     }
-    else {
+    else{
         this.attackPercent = this.attacks['kick'];
-    }
+        this.guy.animations.play('kick');
+    };
 
-        if (this.guy.body.touching.down){
-            this.guy.animations.play('kick');
-        }
-        else {
-            this.guy.animations.play('airKick');
-            this.lastFrame = 35;
+    var player = this;
+    for(var i = 0; i < allPlayers.length; i++){
 
-            setTimeout(function(){
-                this.lastFrame = 13;
-            }, 200)
+    if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
+            allPlayers[i].hurt = true;
+            this.hitOtherPlayer(allPlayers[i]);
         };
-        var player = this;
-        for(var i = 0; i < allPlayers.length; i++){
-
-            if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
-                allPlayers[i].hurt = true;
-               this.hitOtherPlayer(allPlayers[i]);
-            };
-        };
+    };
 };
 
 Player.prototype.hitOtherPlayer = function(otherPlayer) {
@@ -163,8 +152,6 @@ Player.prototype.hitOtherPlayer = function(otherPlayer) {
             otherPlayer.guy.body.velocity.setTo ((otherPlayer.percent * this.attackPercent), -(otherPlayer.percent * this.attackPercent));
         }
 
-        otherPlayer.lastFrame = 28;
-
         otherPlayer.hud.text = otherPlayer.playerName + ": " + Math.floor((otherPlayer.percent * 2) / 10) + "  Lives: "  + otherPlayer.lives;
         otherPlayer.guy.animations.play('hurt');
 
@@ -175,7 +162,6 @@ Player.prototype.hitOtherPlayer = function(otherPlayer) {
             otherPlayer.guy.body.velocity.y = 0;
             otherPlayer.guy.allowGravity = true;
             otherPlayer.hurt = false;
-            otherPlayer.lastFrame = 0;
 
         }, (otherPlayer.percent * 2) );
 };
@@ -192,7 +178,6 @@ Player.prototype.playerDead = function(){
             this.guy.body.y = game.world.height -400;
             this.percent = 0;
             this.lives -= 1;
-            this.lastFrame = 0;
             this.hud.text = this.playerName + ": " + 0 + "  Lives: "  + this.lives;
 
         };
@@ -205,7 +190,7 @@ Player.prototype.playerDead = function(){
 };
 
 Player.prototype.allKeysUp = function (){
-    if(this.keyLeft.isUp && this.keyRight.isUp && this.keyJump.isUp && this.guy.body.touching.down && this.keyKick.isUp && this.keySuperKick.isUp && this.keyPunch.isUp && this.keySuperPunch.isUp){
+    if(this.keyLeft.isUp && this.keyRight.isUp && this.keyJump.isUp && this.guy.body.touching.down && this.keyKick.isUp && this.keySuperKick.isUp && this.keyPunch.isUp && this.keySuperPunch.isUp && this.keyDown.isUp){
         return true;
     }
 
@@ -231,7 +216,8 @@ Player.prototype.touching = function (otherPlayer){
 Player.prototype.buildAnimations = function(){
 
     this.guy.animations.add('walk', [4, 5, 6, 7, 8, 9, 10,11], 10, true);
-    this.guy.animations.add('duck', [3], 10, true);
+    this.guy.animations.add('jump', [13], 10, true);
+    this.guy.animations.add('down', [3], 10, true);
     this.guy.animations.add('punch', [18], 10, true);
     this.guy.animations.add('kick', [30], 10, true);
     this.guy.animations.add('airKick', [35], 10, true);
@@ -245,41 +231,39 @@ Player.prototype.buildAnimations = function(){
 Player.prototype.falling = function(){
     if (this.guy.body.touching.down){
         this.jumpCount = 0;
-    }
-    else{
-        this.lastFrame = 13;
     };
 };
 
 
 Player.prototype.checkMovement = function(){
-            this.keyLeft.onDown.add(moveLeft.bind(this), this);
-            this.keyRight.onDown.add(moveRight.bind(this), this);
-            this.keySuperKick.onDown.add(superKick.bind(this), this);
-            this.keySuperPunch.onDown.add(superPunch.bind(this), this);
-            this.keyPunch.onDown.add(punch.bind(this), this);
-            this.keyKick.onDown.add(kick.bind(this), this);
+    if (this.allKeysUp()){
+        this.resetVelocity(this);
+        this.guy.frame = 0
+    };
 
+    this.keyLeft.onDown.add(moveLeft.bind(this), this);
+    this.keyRight.onDown.add(moveRight.bind(this), this);
+    this.keyDown.onDown.add(down.bind(this), this);
+    this.keySuperKick.onDown.add(superKick.bind(this), this);
+    this.keySuperPunch.onDown.add(superPunch.bind(this), this);
+    this.keyPunch.onDown.add(punch.bind(this), this);
+    this.keyKick.onDown.add(kick.bind(this), this);
 
-            if(this.keyDuck.isDown){
-                this.isDown = true;
-            };
-            this.keyDuck.onDown.add(duck.bind(this), this);
-
-
-            if(this.keyJump.isDown){
-                this.isJumping = true;
-            };
-            this.keyJump.onDown.add(jumpCheck.bind(this), this);
-}
+    if(this.keyJump.isDown){
+        this.isJumping = true;
+        this.keyJump.onDown.add(jumpCheck.bind(this), this);
+    };
+};
 
 var lifesPerPerson = 2;
 var player1 = new Player('guy');
+player1.guy.frame = 0
 player1.playerName = 'Player 1'
 allPlayers.push(player1);
 
 var player2 = new Player('girl');
 player2.playerName = 'Player 2'
+player2.guy.frame = 0
 allPlayers.push(player2);
 
 var hudPosX = 16
@@ -300,23 +284,12 @@ function update() {
         var currentPlayer = allPlayers[i];
         checkFace(currentPlayer);
 
-        //  Collide the currentPlayer and the stars with the platforms
         game.physics.arcade.collide(currentPlayer.guy, platforms);
 
         if (currentPlayer.hurt == false){
             currentPlayer.falling();
             currentPlayer.checkMovement();
         };
-
-        if (!currentPlayer.guy.body.touching.down){
-            currentPlayer.guy.frame = currentPlayer.lastFrame;
-        };
-
-        if (currentPlayer.allKeysUp()){
-            currentPlayer.resetVelocity(currentPlayer);
-            currentPlayer.guy.frame = 0
-        };
-
 
 
         if(currentPlayer.playerDead()){
@@ -364,7 +337,7 @@ function buildPlayers(){
         allPlayers[i].guy = game.add.sprite(((i + 1)* 200), game.world.height - 510, allPlayers[i].persona);
         game.physics.enable(allPlayers[i].guy, Phaser.Physics.ARCADE);
         allPlayers[i].guy.anchor.setTo(.5, 1);
-        allPlayers[i].guy.body.bounce.setTo(0.1, 0.1);
+        allPlayers[i].guy.body.bounce.setTo(0, 0.1);
         allPlayers[i].guy.body.gravity.y = 400;
         allPlayers[i].buildAnimations();
         allPlayers[i].lives = lifesPerPerson;
@@ -383,7 +356,7 @@ function buildPlayerControls(player){
         Player.prototype.keyLeft = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
         Player.prototype.keyRight = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
         Player.prototype.keyJump = game.input.keyboard.addKey(Phaser.Keyboard.UP);
-        Player.prototype.keyDuck = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
+        Player.prototype.keyDown = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
         Player.prototype.keyPunch = game.input.keyboard.addKey(Phaser.Keyboard.ALT);
         Player.prototype.keyKick = game.input.keyboard.addKey(Phaser.Keyboard.M);
         Player.prototype.keySuperKick = game.input.keyboard.addKey(Phaser.Keyboard.N);
@@ -393,7 +366,7 @@ function buildPlayerControls(player){
     player.keyLeft = game.input.keyboard.addKey(Phaser.Keyboard.A);
     player.keyRight = game.input.keyboard.addKey(Phaser.Keyboard.D);
     player.keyJump = game.input.keyboard.addKey(Phaser.Keyboard.W);
-    player.keyDuck = game.input.keyboard.addKey(Phaser.Keyboard.S);
+    player.keyDown = game.input.keyboard.addKey(Phaser.Keyboard.S);
     player.keyPunch = game.input.keyboard.addKey(Phaser.Keyboard.F);
     player.keyKick = game.input.keyboard.addKey(Phaser.Keyboard.G);
     player.keySuperKick = game.input.keyboard.addKey(Phaser.Keyboard.R);
@@ -409,7 +382,6 @@ function buildHud(player){
 function restartGame() {
     for(var i = 0; i< allPlayers.length; i++){
         allPlayers[i].lives = lifesPerPerson;
-        allPlayers[i].lastFrame = 0;
         game.state.start(game.state.current);
     }
 };
@@ -423,16 +395,16 @@ function checkFace(pice1){
     };
 };
 
-function jumpCheck(){
-            if(this.isJumping){
-               if (this.jumpCount < 2){
-                    this.jump();
-                    this.jumpCount ++;
-               };
-            };
+jumpCheck = function(){
+    if(this.isJumping){
+        if (this.jumpCount < 2){
+            this.jump();
+            this.jumpCount ++;
             this.isJumping = false;
-};
+        };
+    };
 
+};
 
 moveLeft = function(){
     this.moveLeft();
@@ -440,8 +412,9 @@ moveLeft = function(){
 moveRight = function(){
     this.moveRight();
 };
-duck = function(){
-    this.duck();
+
+down = function(){
+    this.down();
 };
 
 kick = function(){
