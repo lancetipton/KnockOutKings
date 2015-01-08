@@ -9,7 +9,6 @@ function preload() {
 
     game.load.spritesheet('guy', 'public/images/guy.png', 80, 108);
     game.load.spritesheet('girl', 'public/images/girl.png', 80, 108);
-    game.load.spritesheet('girl', 'public/images/girl.png', 80, 108);
 }
 
 allPlayers = [];
@@ -31,7 +30,7 @@ function Player(persona){
     this.percent = 1;
     this.isLeft = false;
     this.persona = persona;
-    this.guy = "";
+    this.avatar = "";
     this.hurt = false;
     this.hud = '';
     this.attacks = {punch: 1, kick: 1, airKick: 2, airPunch: 2, superPunch: 3, superKick: 3};
@@ -46,7 +45,7 @@ function Player(persona){
 function Item(name, effect, sprite, animation){
     this.name = name;
     this.effect = effect;
-    this.guy = '';
+    this.avatar = '';
     this.animation = animation
 }
 
@@ -57,44 +56,44 @@ allItems.push(star);
 allItems.push(health);
 
 Item.prototype.buildItem = function(){
-    game.physics.enable(this.guy, Phaser.Physics.ARCADE);
-    this.guy = game.add.sprite(200, game.world.height - 510, this.name);
-    this.guy.anchor.setTo(.5, 1);
-    this.guy.body.bounce.setTo(0, 0.1);
-    this.guy.body.gravity.y = 400;
+    this.avatar = game.add.sprite(300, game.world.height - 510, this.name);
+    game.physics.enable(this.avatar, Phaser.Physics.ARCADE);
+    this.avatar.anchor.setTo(0.5, 0.5);
+    this.avatar.body.bounce.setTo(0, 0.5);
+    this.avatar.body.gravity.y = 100;
     this.buildAnimations();
-    this.guy.animations.play(this.animation)
+    this.avatar.animations.play(this.animation)
 };
 
 Item.prototype.buildAnimations = function(){
-    this.guy.animations.add(this.animation, [0, 1, 2], 15, true);
+    this.avatar.animations.add(this.animation, [0, 1, 2], 15, true);
 };
 
 Item.prototype.removeItem = function(){
-    this.guy.kill();
+    this.avatar.kill();
 };
 
 Player.prototype.moveLeft = function() {
-    if(this.guy.body.touching.down){
-        this.guy.animations.play('walk');
+    if(this.avatar.body.touching.down){
+        this.avatar.animations.play('walk');
     };
 
     this.isLeft = true;
-    this.guy.body.velocity.x = -150;
+    this.avatar.body.velocity.x = -150;
 };
 
 Player.prototype.moveRight = function() {
-    if(this.guy.body.touching.down){
-        this.guy.animations.play('walk');
+    if(this.avatar.body.touching.down){
+        this.avatar.animations.play('walk');
     };
     this.isLeft = false;
-    this.guy.body.velocity.x = 150;
+    this.avatar.body.velocity.x = 150;
 };
 
 Player.prototype.punch = function() {
         this.attackPercent = this.attacks['punch'];
 
-        this.guy.animations.play('punch');
+        this.avatar.animations.play('punch');
         var player = this;
 
         for(var i = 0; i < allPlayers.length; i++){
@@ -108,19 +107,19 @@ Player.prototype.punch = function() {
 
 Player.prototype.kick = function() {
 
-    if(!this.guy.body.touching.down == true){
-        this.guy.animations.play('airKick');
+    if(!this.avatar.body.touching.down == true){
+        this.avatar.animations.play('airKick');
         this.attackPercent = this.attacks['airKick'];
 
         player = this
         setTimeout(function(){
-                player.guy.animations.play('jump');
+                player.avatar.animations.play('jump');
         }, 300);
     }
 
     else{
         this.attackPercent = this.attacks['kick'];
-        this.guy.animations.play('kick');
+        this.avatar.animations.play('kick');
     };
 
     var player = this;
@@ -135,9 +134,9 @@ Player.prototype.kick = function() {
 
 
 Player.prototype.superKick = function() {
-    if(this.guy.body.touching.down){
+    if(this.avatar.body.touching.down){
         this.attackPercent = this.attacks['superKick'];
-        this.guy.animations.play('superKick');
+        this.avatar.animations.play('superKick');
         var player = this;
 
         for(var i = 0; i < allPlayers.length; i++){
@@ -152,9 +151,9 @@ Player.prototype.superKick = function() {
 };
 
 Player.prototype.superPunch = function() {
-    if(this.guy.body.touching.down){
+    if(this.avatar.body.touching.down){
         this.attackPercent = this.attacks['superPunch'];
-        this.guy.animations.play('superPunch');
+        this.avatar.animations.play('superPunch');
         var player = this;
 
         for(var i = 0; i < allPlayers.length; i++){
@@ -167,42 +166,41 @@ Player.prototype.superPunch = function() {
     };
 };
 
-
 Player.prototype.jump = function() {
-    this.guy.body.velocity.y = -300;
-    this.guy.animations.play('jump');
+    this.avatar.body.velocity.y = -300;
+    this.avatar.animations.play('jump');
 };
 
 Player.prototype.down = function() {
-    if(this.guy.body.touching.down){
-        this.guy.animations.play('down');
+    if(this.avatar.body.touching.down){
+        this.avatar.animations.play('down');
         this.isDown = true;
     }
     else{
-        if(this.guy.body.velocity.y > 300){
-            this.guy.body.velocity.y = 200
+        if(this.avatar.body.velocity.y > 300){
+            this.avatar.body.velocity.y = 200
         }
-        this.guy.body.velocity.y += 1.5;
+        this.avatar.body.velocity.y += 1.5;
     }
 };
 
 Player.prototype.playerDead = function(){
     if (this.lives != 0){
-        var posX = this.guy.body.x;
-        var posY = this.guy.body.y;
+        var posX = this.avatar.body.x;
+        var posY = this.avatar.body.y;
         if(posX < killZone.left|| posX > killZone.right || posY > killZone.top || posY < killZone.bottom){
 
-            this.guy.kill();
+            this.avatar.kill();
             this.percent = 0;
             this.lives -= 1;
             this.hud.text = this.playerName + ": " + 0 + "  Lives: "  + this.lives;
-            this.guy.allowGravity = false;
+            this.avatar.allowGravity = false;
             this.resetVelocity();
-            this.guy.revive();
-            this.guy.body.x = 400;
-            this.guy.body.y = game.world.height -600;
-            this.guy.allowGravity = true;
-            this.guy.animations.play('stand');
+            this.avatar.revive();
+            this.avatar.body.x = 400;
+            this.avatar.body.y = game.world.height -600;
+            this.avatar.allowGravity = true;
+            this.avatar.animations.play('stand');
 
         };
         return false;
@@ -210,11 +208,10 @@ Player.prototype.playerDead = function(){
     else {
         return true
     }
-
 };
 
 Player.prototype.allKeysUp = function (){
-    if(this.keyLeft.isUp && this.keyRight.isUp && this.keyJump.isUp && this.guy.body.touching.down && this.keyKick.isUp && this.keySuperKick.isUp && this.keyPunch.isUp && this.keySuperPunch.isUp && this.keyDown.isUp){
+    if(this.keyLeft.isUp && this.keyRight.isUp && this.keyJump.isUp && this.avatar.body.touching.down && this.keyKick.isUp && this.keySuperKick.isUp && this.keyPunch.isUp && this.keySuperPunch.isUp && this.keyDown.isUp){
         return true;
     }
 
@@ -225,15 +222,26 @@ Player.prototype.allKeysUp = function (){
 
 Player.prototype.resetVelocity = function (){
     if(this.hurt == false){
-        this.guy.body.velocity.x = 0;
-        this.guy.body.velocity.y = 0;
+        this.avatar.body.velocity.x = 0;
+        this.avatar.body.velocity.y = 0;
     };
 };
 
-Player.prototype.touching = function (object){
-    console.log(object.guy.body);
-    if (this.guy.body.x  <= (object.guy.body.x + 64) &&  object.guy.body.x <= (this.guy.body.x + 64)
-            && this.guy.body.y  <= (object.guy.body.y + 64) &&  object.guy.body.y <= (this.guy.body.y + 64) ) {
+Player.prototype.touching = function (otherplayer){
+
+    if (this.avatar.body.x  <= (otherplayer.avatar.body.x + 64) &&  otherplayer.avatar.body.x <= (this.avatar.body.x + 64)
+            && this.avatar.body.y  <= (otherplayer.avatar.body.y + 64) &&  otherplayer.avatar.body.y <= (this.avatar.body.y + 64) ) {
+        return true;
+    }
+    else {
+        return false;
+    }
+};
+
+Player.prototype.touchingItem = function (item){
+
+    if (this.avatar.body.x  <= (item.avatar.body.x + 16) &&  item.avatar.body.x <= (this.avatar.body.x + 16)
+            && this.avatar.body.y  <= (item.avatar.body.y + 16) &&  item.avatar.body.y <= (this.avatar.body.y + 16) ) {
         return true;
     }
     else {
@@ -242,23 +250,23 @@ Player.prototype.touching = function (object){
 };
 
 Player.prototype.buildAnimations = function(){
-    this.guy.animations.add('stand', [0, 1, 2], 15, true);
-    this.guy.animations.add('walk', [4, 5, 6, 7, 8, 9, 10,11], 15, true);
-    this.guy.animations.add('jump', [14, 13, 12, 13], 15, false);
-    this.guy.animations.add('down', [3], 15, true);
-    this.guy.animations.add('punch', [17, 18, 17, 0], 15, false);
-    this.guy.animations.add('airPunch', [33, 34, 35, 34, 33], 15, false);
-    this.guy.animations.add('superPunch', [19, 20, 21, 20, 19, 0], 15, false);
-    this.guy.animations.add('kick', [24, 25, 24, 0], 15, false);
-    this.guy.animations.add('airKick', [30, 31, 32, 32, 32, 32, 31, 30, ], 15, false);
-    this.guy.animations.add('superKick', [26, 27, 28, 29, 28, 27, 26, 0], 15, false);
+    this.avatar.animations.add('stand', [0, 1, 2], 15, true);
+    this.avatar.animations.add('walk', [4, 5, 6, 7, 8, 9, 10,11], 15, true);
+    this.avatar.animations.add('jump', [14, 13, 12, 13], 12, false);
+    this.avatar.animations.add('down', [3], 15, true);
+    this.avatar.animations.add('punch', [17, 18, 17, 0], 15, false);
+    this.avatar.animations.add('airPunch', [33, 34, 35, 34, 33], 15, false);
+    this.avatar.animations.add('superPunch', [19, 20, 21, 20, 19, 0], 15, false);
+    this.avatar.animations.add('kick', [24, 25, 24, 0], 15, false);
+    this.avatar.animations.add('airKick', [30, 31, 32, 32, 32, 32, 31, 30, ], 15, false);
+    this.avatar.animations.add('superKick', [26, 27, 28, 29, 28, 27, 26, 0], 15, false);
 
-    this.guy.animations.add('hurt', [23, 22], 10, false);
+    this.avatar.animations.add('hurt', [23, 22], 10, false);
 
 }
 
 Player.prototype.falling = function(){
-    if (this.guy.body.touching.down){
+    if (this.avatar.body.touching.down){
         this.jumpCount = 0;
     }
 };
@@ -267,7 +275,7 @@ Player.prototype.falling = function(){
 Player.prototype.checkMovement = function(){
     if (this.allKeysUp() && this.hurt == false){
         this.resetVelocity(this);
-        this.guy.frame = 0
+        this.avatar.frame = 0
     };
 
     this.keyLeft.onDown.add(moveLeft.bind(this), this);
@@ -286,8 +294,8 @@ Player.prototype.checkMovement = function(){
 
 Player.prototype.getItem = function(){
     for(var i = 0; i < allItems.length; i++){
-        if(this.touching(allItems[i])){
-            allItems.removeItem();
+        if(this.touchingItem(allItems[i])){
+            allItems[i].removeItem();
         };
     };
 
@@ -295,16 +303,16 @@ Player.prototype.getItem = function(){
 
 var lifesPerPerson = 2;
 var player1 = new Player('guy');
-player1.guy.frame = 0
+player1.avatar.frame = 0
 player1.playerName = 'Player 1'
 allPlayers.push(player1);
 
 var player2 = new Player('girl');
 player2.playerName = 'Player 2'
-player2.guy.frame = 0
+player2.avatar.frame = 0
 allPlayers.push(player2);
 
-var hudPosX = 16
+var hudPosX = 16;
 var hudPosY = 16;
 
 
@@ -323,26 +331,27 @@ function update() {
         checkFace(currentPlayer);
         currentPlayer.getItem()
 
-        game.physics.arcade.collide(currentPlayer.guy, platforms);
+        game.physics.arcade.collide(currentPlayer.avatar, platforms);
+
 
         if (currentPlayer.hurt == false){
             currentPlayer.falling();
             currentPlayer.checkMovement();
-
         };
-
 
         if(currentPlayer.playerDead()){
             restartGame();
         };
-
-
     };
 
+    for(var i = 0; i < allItems.length; i++){
+        game.physics.arcade.collide(allItems[i].avatar, platforms);
+
+
+    }
 
 
 };
-
 
 function buildItems(){
     for(var i = 0; i < allItems.length; i++){
@@ -385,11 +394,12 @@ function buildGame(){
 
 function buildPlayers(){
     for(var i = 0; i < allPlayers.length; i++){
-        allPlayers[i].guy = game.add.sprite(((i + 1)* 200), game.world.height - 510, allPlayers[i].persona);
-        game.physics.enable(allPlayers[i].guy, Phaser.Physics.ARCADE);
-        allPlayers[i].guy.anchor.setTo(.5, 1);
-        allPlayers[i].guy.body.bounce.setTo(0, 0.1);
-        allPlayers[i].guy.body.gravity.y = 400;
+        allPlayers[i].avatar = game.add.sprite(((i + 1)* 200), game.world.height - 510, allPlayers[i].persona);
+        game.physics.enable(allPlayers[i].avatar, Phaser.Physics.ARCADE);
+        allPlayers[i].avatar.anchor.setTo(.5, 1);
+        allPlayers[i].avatar.body.bounce.setTo(0, 0.1);
+        allPlayers[i].avatar.body.gravity.y = 400;
+        // allPlayers[i].avatar.health = 0;
         allPlayers[i].buildAnimations();
         allPlayers[i].lives = lifesPerPerson;
 
@@ -439,10 +449,10 @@ function restartGame() {
 
 function checkFace(pice1){
     if (pice1.isLeft){
-        pice1.guy.scale.x = -1;
+        pice1.avatar.scale.x = -1;
     }
     else {
-       pice1.guy.scale.x = 1;
+       pice1.avatar.scale.x = 1;
     };
 };
 
@@ -487,26 +497,26 @@ attackPlayer = function(attackingPlayer, hurtPlayer){
 
         checkFace(hurtPlayer)
 
-        hurtPlayer.guy.allowGravity = false;
+        hurtPlayer.avatar.allowGravity = false;
 
         if (attackingPlayer.isLeft){
             hurtPlayer.isLeft = false;
-            hurtPlayer.guy.body.velocity.setTo (-(hurtPlayer.percent * 1.5), -(hurtPlayer.percent * 3));
+            hurtPlayer.avatar.body.velocity.setTo (-(hurtPlayer.percent * 1.5), -(hurtPlayer.percent * 3));
         }
         else {
             hurtPlayer.isLeft = true;
-            hurtPlayer.guy.body.velocity.setTo ((hurtPlayer.percent * 1.5), -(hurtPlayer.percent * 3));
+            hurtPlayer.avatar.body.velocity.setTo ((hurtPlayer.percent * 1.5), -(hurtPlayer.percent * 3));
         }
 
-        hurtPlayer.guy.animations.play('hurt');
+        hurtPlayer.avatar.animations.play('hurt');
 
         updateHud(hurtPlayer);
 
         setTimeout(function() {
             hurtPlayer.percent += (attackingPlayer.attackPercent/ 150)
-            hurtPlayer.guy.body.velocity.x = 0;
-            hurtPlayer.guy.body.velocity.y = 0;
-            hurtPlayer.guy.allowGravity = true;
+            hurtPlayer.avatar.body.velocity.x = 0;
+            hurtPlayer.avatar.body.velocity.y = 0;
+            hurtPlayer.avatar.allowGravity = true;
             hurtPlayer.hurt = false;
 
         },hurtWaitTimeout(hurtPlayer));
