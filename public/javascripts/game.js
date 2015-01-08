@@ -1,16 +1,19 @@
 var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
 function preload() {
-
     game.load.image('sky', 'public/images/sky.png');
     game.load.image('ground', 'public/images/platform.png');
-    game.load.image('star', 'public/images/star.png');
+
+    game.load.spritesheet('star', 'public/images/star.png', 24, 22);
+    game.load.spritesheet('health', 'public/images/health.png', 32, 32);
+
     game.load.spritesheet('guy', 'public/images/guy.png', 80, 108);
     game.load.spritesheet('girl', 'public/images/girl.png', 80, 108);
-
+    game.load.spritesheet('girl', 'public/images/girl.png', 80, 108);
 }
 
 allPlayers = [];
+allItems = [];
 
 
 function killZone(){
@@ -24,26 +27,58 @@ var killZone = new killZone();
 
 
 function Player(persona){
-    this.playerName = ''
+    this.playerName = '';
     this.percent = 1;
     this.isLeft = false;
     this.persona = persona;
     this.guy = "";
     this.hurt = false;
     this.hud = '';
-    this.attacks = {punch: 1, kick: 1, airKick: 3, superPunch: 2, superKick: 2};
+    this.attacks = {punch: 1, kick: 1, airKick: 2, airPunch: 2, superPunch: 3, superKick: 3};
     this.attackPercent ='';
     this.jumpCount = 0;
     this.isJumping = true;
     this.isDown = false;
     this.lives = 0;
-    this.lastFrame = 0
+    this.lastFrame = 0;
+};
+
+function Item(name, effect, sprite, animation){
+    this.name = name;
+    this.effect = effect;
+    this.guy = '';
+    this.animation = animation
+}
+
+
+var star = new Item('star', -10, '', 'flash')
+var health = new Item('health', -10, '', 'health')
+allItems.push(star);
+allItems.push(health);
+
+Item.prototype.buildItem = function(){
+    game.physics.enable(this.guy, Phaser.Physics.ARCADE);
+    this.guy = game.add.sprite(200, game.world.height - 510, this.name);
+    this.guy.anchor.setTo(.5, 1);
+    this.guy.body.bounce.setTo(0, 0.1);
+    this.guy.body.gravity.y = 400;
+    this.buildAnimations();
+    this.guy.animations.play(this.animation)
+};
+
+Item.prototype.buildAnimations = function(){
+    this.guy.animations.add(this.animation, [0, 1, 2], 15, true);
+};
+
+Item.prototype.removeItem = function(){
+    this.guy.kill();
 };
 
 Player.prototype.moveLeft = function() {
     if(this.guy.body.touching.down){
         this.guy.animations.play('walk');
     };
+
     this.isLeft = true;
     this.guy.body.velocity.x = -150;
 };
@@ -195,32 +230,37 @@ Player.prototype.resetVelocity = function (){
     };
 };
 
-Player.prototype.touching = function (otherPlayer){
-    if (this.guy.body.x  <= (otherPlayer.guy.body.x + 64) &&  otherPlayer.guy.body.x <= (this.guy.body.x + 64)
-            && this.guy.body.y  <= (otherPlayer.guy.body.y + 64) &&  otherPlayer.guy.body.y <= (this.guy.body.y + 64) ) {
+Player.prototype.touching = function (object){
+    console.log(object.guy.body);
+    if (this.guy.body.x  <= (object.guy.body.x + 64) &&  object.guy.body.x <= (this.guy.body.x + 64)
+            && this.guy.body.y  <= (object.guy.body.y + 64) &&  object.guy.body.y <= (this.guy.body.y + 64) ) {
         return true;
-    };
+    }
+    else {
+        return false;
+    }
 };
 
 Player.prototype.buildAnimations = function(){
-    this.guy.animations.add('stand', [0], 10, true);
-    this.guy.animations.add('walk', [4, 5, 6, 7, 8, 9, 10,11], 10, true);
-    this.guy.animations.add('jump', [14, 13, 12, 13], 5, false);
-    this.guy.animations.add('down', [3], 10, true);
-    this.guy.animations.add('punch', [18], 10, true);
-    this.guy.animations.add('kick', [30], 10, true);
-    this.guy.animations.add('airKick', [35], 10, true);
-    this.guy.animations.add('superKick', [31, 32, 33, 34], 10, true);
-    this.guy.animations.add('superPunch', [19, 20, 21], 10, true);
-    this.guy.animations.add('hurt', [27, 28], 10, false);
-    this.guy.animations.add('die', [22, 23, 24, 25, 26], 10, true);
+    this.guy.animations.add('stand', [0, 1, 2], 15, true);
+    this.guy.animations.add('walk', [4, 5, 6, 7, 8, 9, 10,11], 15, true);
+    this.guy.animations.add('jump', [14, 13, 12, 13], 15, false);
+    this.guy.animations.add('down', [3], 15, true);
+    this.guy.animations.add('punch', [17, 18, 17, 0], 15, false);
+    this.guy.animations.add('airPunch', [33, 34, 35, 34, 33], 15, false);
+    this.guy.animations.add('superPunch', [19, 20, 21, 20, 19, 0], 15, false);
+    this.guy.animations.add('kick', [24, 25, 24, 0], 15, false);
+    this.guy.animations.add('airKick', [30, 31, 32, 32, 32, 32, 31, 30, ], 15, false);
+    this.guy.animations.add('superKick', [26, 27, 28, 29, 28, 27, 26, 0], 15, false);
+
+    this.guy.animations.add('hurt', [23, 22], 10, false);
 
 }
 
 Player.prototype.falling = function(){
     if (this.guy.body.touching.down){
         this.jumpCount = 0;
-    };
+    }
 };
 
 
@@ -244,6 +284,15 @@ Player.prototype.checkMovement = function(){
     };
 };
 
+Player.prototype.getItem = function(){
+    for(var i = 0; i < allItems.length; i++){
+        if(this.touching(allItems[i])){
+            allItems.removeItem();
+        };
+    };
+
+};
+
 var lifesPerPerson = 2;
 var player1 = new Player('guy');
 player1.guy.frame = 0
@@ -260,10 +309,10 @@ var hudPosY = 16;
 
 
 function create() {
-
     buildGame();
     buildLevel();
     buildPlayers();
+    buildItems();
 
 };
 
@@ -272,12 +321,14 @@ function update() {
     for(var i = 0; i < allPlayers.length; i++){
         var currentPlayer = allPlayers[i];
         checkFace(currentPlayer);
+        currentPlayer.getItem()
 
         game.physics.arcade.collide(currentPlayer.guy, platforms);
 
         if (currentPlayer.hurt == false){
             currentPlayer.falling();
             currentPlayer.checkMovement();
+
         };
 
 
@@ -285,22 +336,19 @@ function update() {
             restartGame();
         };
 
+
     };
 
+
+
 };
 
-function buildGame(){
-    //  We're going to be using physics, so enable the Arcade Physics system
-    game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    //  A simple background for our game
-    game.add.sprite(0, 0, 'sky');
-
-    killZone.top = game.world.height + 250;
-    killZone.bottom = -(game.world.height - 250);
-    killZone.left = -(game.world.width - 250);
-    killZone.right = game.world.width + 250;
-};
+function buildItems(){
+    for(var i = 0; i < allItems.length; i++){
+        allItems[i].buildItem();
+    };
+}
 
 function buildLevel(){
 
@@ -319,6 +367,20 @@ function buildLevel(){
 
     ledge = platforms.create(-150, 200, 'ground');
     ledge.body.immovable = true;
+};
+
+function buildGame(){
+    //  We're going to be using physics, so enable the Arcade Physics system
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+
+    //  A simple background for our game
+    game.add.sprite(0, 0, 'sky');
+
+    killZone.top = game.world.height + 250;
+    killZone.bottom = -(game.world.height - 250);
+    killZone.left = -(game.world.width - 250);
+    killZone.right = game.world.width + 250;
 };
 
 function buildPlayers(){
