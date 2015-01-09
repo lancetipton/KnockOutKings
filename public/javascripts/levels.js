@@ -1,6 +1,10 @@
+// Levels
+// array
+var space = { background: 'sky', outOfScreen: '250'}
 
-function Level(){
-
+function Level(currentLevel){
+    this.background = currentLevel['background'];
+    this.outOfScreen = currentLevel['outOfScreen'];
 };
 
 Level.prototype.killZone = function(outOfScreen){
@@ -10,7 +14,10 @@ Level.prototype.killZone = function(outOfScreen){
     this.killZone.right = game.world.width + outOfScreen;
 }
 
+
 Level.prototype.build = function(){
+
+    game.add.sprite(0, 0, this.background);
     //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = game.add.group();
 
@@ -30,5 +37,12 @@ Level.prototype.build = function(){
 
 };
 
-var space = new Level();
-currentLevel = space;
+
+currentLevel = new Level(space);
+
+function buildLevel(){
+
+    currentLevel.build();
+};
+
+

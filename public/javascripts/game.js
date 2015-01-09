@@ -1,96 +1,135 @@
-var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+//  Play game state. Where the action happends.
+var play = {
 
-function preload() {
-    game.load.image('sky', 'public/images/sky.png');
-    game.load.image('ground', 'public/images/platform.png');
+    preload: function() {
+        game.load.image('sky', 'public/images/sky.png');
+        game.load.image('ground', 'public/images/platform.png');
 
-    game.load.spritesheet('star', 'public/images/star.png', 24, 22);
-    game.load.spritesheet('health', 'public/images/health.png', 32, 32);
+        game.load.spritesheet('star', 'public/images/star.png', 24, 22);
+        game.load.spritesheet('health', 'public/images/health.png', 32, 32);
 
-    game.load.spritesheet('guy', 'public/images/guy.png', 80, 108);
-    game.load.spritesheet('girl', 'public/images/girl.png', 80, 108);
-}
+        game.load.spritesheet('guy', 'public/images/guy.png', 80, 108);
+        game.load.spritesheet('girl', 'public/images/girl.png', 80, 108);
+    },
 
-// this is the very first fucntion that is run, and sets up our game:
+    // this is the very first fucntion that is run, and sets up our game:
 
-function create() {
-    buildGame();
-    buildLevel(space);
-    buildPlayers();
-    buildItems();
+    create: function() {
+        buildGame();
+        buildLevel();
+        buildPlayers();
+        buildItems();
+    },
 
-};
+    // this is the game loop that will run over and over again. About 60 FPS.
+    update: function() {
+        // gets the current level from the levels.js
 
-// this is the game loop that will run over and over again. About every 1 second.
+        for(var i = 0; i < allPlayers.length; i++){
+            var currentPlayer = allPlayers[i];
+            checkFace(currentPlayer);
+            currentPlayer.getItem()
 
-function update() {
-    // gets the current level from the levels.js
-    var level = currentLevel;
+            game.physics.arcade.collide(currentPlayer.avatar, platforms);
 
-    for(var i = 0; i < allPlayers.length; i++){
-        var currentPlayer = allPlayers[i];
-        checkFace(currentPlayer);
-        currentPlayer.getItem()
+            if (currentPlayer.hurt == false){
+                currentPlayer.falling();
+                currentPlayer.checkMovement();
+            };
 
-        game.physics.arcade.collide(currentPlayer.avatar, platforms);
-
-
-        if (currentPlayer.hurt == false){
-            currentPlayer.falling();
-            currentPlayer.checkMovement();
+            if(currentPlayer.playerDead(currentLevel)){
+                restartGame();
+            };
         };
 
-        if(currentPlayer.playerDead(level)){
-            restartGame();
-        };
-    };
-
-    for(var i = 0; i < allItems.length; i++){
-        game.physics.arcade.collide(allItems[i].avatar, platforms);
-
-
+        for(var i = 0; i < allItems.length; i++){
+            game.physics.arcade.collide(allItems[i].avatar, platforms);
+        }
     }
 };
-
-
-function buildLevel(level){
-    level.build();
-};
-
 
 function buildGame(){
-
-    //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
-
-    //  A simple background for our game
-    game.add.sprite(0, 0, 'sky');
 };
 
-function buildPlayers(){
-    for(var i = 0; i < allPlayers.length; i++){
-        allPlayers[i].avatar = game.add.sprite(((i + 1)* 200), game.world.height - 510, allPlayers[i].persona);
-        game.physics.enable(allPlayers[i].avatar, Phaser.Physics.ARCADE);
-        allPlayers[i].avatar.anchor.setTo(.5, 1);
-        allPlayers[i].avatar.body.bounce.setTo(0, 0.1);
-        allPlayers[i].avatar.body.gravity.y = 400;
-        // allPlayers[i].avatar.health = 0;
-        allPlayers[i].buildAnimations();
-        allPlayers[i].lives = lifesPerPerson;
+// This is the start screen game state. To be implimented.
+var main = {
+  preload: function() {
+    // load the play button into this game state:
+    game.load.image('play', 'public/images/play.png');
+  },
 
-        if(i%2 != 0){
-            allPlayers[i].isLeft = true;
-        }
+  create: function() {
 
-        buildHud(allPlayers[i]);
-        buildPlayerControls(allPlayers[i]);
-    };
+    // View the play button on the screen:
+    var playBtn = game.add.sprite(game.world.centerX, game.world.centerY, 'play');
+
+    //  Enables all kind of input actions on this image (click, etc)
+    play.inputEnabled = true;
+
+    // When we click on the button, it will do the below. playGame is the function it will run when clicked.
+    game.input.onDown.addOnce(playGame, this);
+
+  },
 };
 
-function restartGame() {
-    for(var i = 0; i< allPlayers.length; i++){
-        allPlayers[i].lives = lifesPerPerson;
-        game.state.start(game.state.current);
-    }
+// this function will run when the playBtn it clicked:
+function playGame () {
+    // This starts the game state play. Which is the actuall game:
+    game.state.start('play');
 };
 
+var avatarSelect = {
+  preload: function() {
+
+  },
+
+  create: function() {
+
+  },
+
+  update: function(){
+
+  }
+};
+
+var levelSelect = {
+  preload: function() {
+
+  },
+
+  create: function() {
+
+  },
+
+  update: function(){
+
+  }
+};
+
+var results = {
+  preload: function() {
+
+  },
+
+  create: function() {
+
+  },
+
+  update: function(){
+
+  }
+};
+
+// State manager:
+var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', 'gameDiv')
+
+game.state.add('main', main);
+game.state.add('avatarSelect', avatarSelect);
+game.state.add('levelSelect', levelSelect);
+game.state.add('play', play);
+game.state.add('results', results);
+
+
+// This is used to start a game state:
+game.state.start('main');

@@ -451,3 +451,31 @@ updateHud = function(player){
     player.hud.text = player.playerName + ": " + Math.round(player.percent)  + "  Lives: "  + player.lives;
 
 }
+
+
+function buildPlayers(){
+    for(var i = 0; i < allPlayers.length; i++){
+        allPlayers[i].avatar = game.add.sprite(((i + 1)* 200), game.world.height - 510, allPlayers[i].persona);
+        game.physics.enable(allPlayers[i].avatar, Phaser.Physics.ARCADE);
+        allPlayers[i].avatar.anchor.setTo(.5, 1);
+        allPlayers[i].avatar.body.bounce.setTo(0, 0.1);
+        allPlayers[i].avatar.body.gravity.y = 400;
+        // allPlayers[i].avatar.health = 0;
+        allPlayers[i].buildAnimations();
+        allPlayers[i].lives = lifesPerPerson;
+
+        if(i%2 != 0){
+            allPlayers[i].isLeft = true;
+        }
+
+        buildHud(allPlayers[i]);
+        buildPlayerControls(allPlayers[i]);
+    };
+};
+
+function restartGame() {
+    for(var i = 0; i< allPlayers.length; i++){
+        allPlayers[i].lives = lifesPerPerson;
+        game.state.start(game.state.current);
+    }
+};
