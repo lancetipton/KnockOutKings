@@ -1,10 +1,28 @@
 // Levels
 // array
-var space = { background: 'sky', outOfScreen: '250'}
+var space = {
+    name: 'space',
+    background: 'sky',
+    outOfScreen: '250',
+    groundLoad: 'public/images/space/platform.png',
+    backgroundLoad: 'public/images/space/space.png',
+    ledges: 1
+};
+
+var rooftop = {
+    name: 'rooftop',
+    background: 'rooftop',
+    outOfScreen: '250',
+    groundLoad: 'public/images/rooftop/building1.png',
+    backgroundLoad: 'public/images/rooftop/rooftop.png',
+    ledges: 1
+};
 
 function Level(currentLevel){
+    this.name = currentLevel['name'];
     this.background = currentLevel['background'];
     this.outOfScreen = currentLevel['outOfScreen'];
+    this.ledges = currentLevel['ledges'];
 };
 
 Level.prototype.killZone = function(outOfScreen){
@@ -24,25 +42,26 @@ Level.prototype.build = function(){
     //  We will enable physics for any object that is created in this group
     platforms.enableBody = true;
 
-    var ground = platforms.create(200, game.world.height - 100, 'ground');
+    for(var i = 0; i< currentLevel.ledges; i++){
 
-    ground.body.immovable = true;
+        var ledge = platforms.create(200, game.world.height - 100, 'ground');
+        ledge.body.immovable = true;
 
-    var ledge = platforms.create(600, 300, 'ground');
-    ledge.body.immovable = true;
+        ledge = platforms.create(600, 300, 'ground');
+        ledge.body.immovable = true;
 
-    ledge = platforms.create(-150, 200, 'ground');
-    ledge.body.immovable = true;
-    this.killZone(250);
+        ledge = platforms.create(-150, 200, 'ground');
+        ledge.body.immovable = true;
+        this.killZone(250);
+    };
 
 };
 
 
-currentLevel = new Level(space);
 
-function buildLevel(){
 
+function buildLevel(selectedLevel){
+    currentLevel = new Level(selectedLevel);
     currentLevel.build();
 };
-
 

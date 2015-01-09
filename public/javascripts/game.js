@@ -2,8 +2,9 @@
 var play = {
 
     preload: function() {
-        game.load.image('sky', 'public/images/sky.png');
-        game.load.image('ground', 'public/images/platform.png');
+        game.load.image('sky', currentLevel.backgroundLoad);
+        game.load.image('rooftop', currentLevel.backgroundLoad);
+        game.load.image('ground', currentLevel.groundLoad);
 
         game.load.spritesheet('star', 'public/images/star.png', 24, 22);
         game.load.spritesheet('health', 'public/images/health.png', 32, 32);
@@ -15,8 +16,9 @@ var play = {
     // this is the very first fucntion that is run, and sets up our game:
 
     create: function() {
+
         buildGame();
-        buildLevel();
+        buildLevel(currentLevel);
         buildPlayers();
         buildItems();
     },
@@ -56,19 +58,22 @@ function buildGame(){
 var main = {
   preload: function() {
     // load the play button into this game state:
-    game.load.image('play', 'public/images/play.png');
+    game.load.image('play', 'public/images/gui/play.png');
   },
 
   create: function() {
 
     // View the play button on the screen:
-    var playBtn = game.add.sprite(game.world.centerX, game.world.centerY, 'play');
+    var playBtn = game.add.sprite(300, game.world.centerY, 'play');
+
 
     //  Enables all kind of input actions on this image (click, etc)
-    play.inputEnabled = true;
+    playBtn.inputEnabled = true;
 
     // When we click on the button, it will do the below. playGame is the function it will run when clicked.
-    game.input.onDown.addOnce(playGame, this);
+    // game.input.onDown.addOnce(playGame, this);
+    playBtn.events.onInputDown.add(playGame, this);
+
 
   },
 };
@@ -76,8 +81,9 @@ var main = {
 // this function will run when the playBtn it clicked:
 function playGame () {
     // This starts the game state play. Which is the actuall game:
-    game.state.start('play');
+    game.state.start('levelSelect');
 };
+
 
 var avatarSelect = {
   preload: function() {
@@ -95,10 +101,20 @@ var avatarSelect = {
 
 var levelSelect = {
   preload: function() {
+    game.load.image('spaceLevel', 'public/images/gui/space.png');
+    game.load.image('rooftopLevel', 'public/images/gui/rooftopBtn.png');
 
   },
 
   create: function() {
+    var spaceLevelBtn = game.add.sprite(80, 50, 'spaceLevel');
+    var rooftopLevelBtn = game.add.sprite(520, 50, 'rooftopLevel');
+
+    spaceLevelBtn.inputEnabled = true;
+    rooftopLevelBtn.inputEnabled = true;
+
+    spaceLevelBtn.events.onInputDown.add(selectSpace, this);
+    rooftopLevelBtn.events.onInputDown.add(selectrRooftop, this);
 
   },
 
@@ -121,6 +137,18 @@ var results = {
   }
 };
 
+
+function selectSpace (){
+    currentLevel = space;
+    game.state.start('play');
+};
+
+function selectrRooftop (){
+    currentLevel = rooftop;
+    game.state.start('play');
+};
+
+
 // State manager:
 var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', 'gameDiv')
 
@@ -133,3 +161,11 @@ game.state.add('results', results);
 
 // This is used to start a game state:
 game.state.start('main');
+
+
+
+
+
+
+
+
