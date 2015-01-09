@@ -2,10 +2,12 @@
 var play = {
 
     preload: function() {
-        game.load.image('sky', currentLevel.backgroundLoad);
-        game.load.image('rooftop', currentLevel.backgroundLoad);
-        game.load.image('ground', currentLevel.groundLoad);
+        // load images for the level:
+        game.load.image(currentLevel.name, currentLevel.backgroundLoad);
+        game.load.image('platform', currentLevel.groundLoad);
 
+
+        // load images for the items:
         game.load.spritesheet('star', 'public/images/star.png', 24, 22);
         game.load.spritesheet('health', 'public/images/health.png', 32, 32);
 
@@ -20,7 +22,7 @@ var play = {
         buildGame();
         buildLevel(currentLevel);
         buildPlayers();
-        buildItems();
+
     },
 
     // this is the game loop that will run over and over again. About 60 FPS.
@@ -28,9 +30,8 @@ var play = {
         // gets the current level from the levels.js
 
         for(var i = 0; i < allPlayers.length; i++){
-            var currentPlayer = allPlayers[i];
+            currentPlayer = allPlayers[i];
             checkFace(currentPlayer);
-            currentPlayer.getItem()
 
             game.physics.arcade.collide(currentPlayer.avatar, platforms);
 
@@ -42,17 +43,50 @@ var play = {
             if(currentPlayer.playerDead(currentLevel)){
                 restartGame();
             };
+
+            for(var i = 0; i < allItems.length; i++){
+                game.physics.arcade.collide(currentPlayer.avatar, allItems[i].avatar, hitItem.bind(allItems[i]), null, this);
+
+            };
+
+
         };
 
+        // check collision with items:
         for(var i = 0; i < allItems.length; i++){
             game.physics.arcade.collide(allItems[i].avatar, platforms);
-        }
+        };
+
+        allowItem = Math.floor(Math.random() * 100)
+
+        if(allowItem < 2){
+            buildNewItem()
+        };
+
+
+
+
     }
 };
 
 function buildGame(){
     game.physics.startSystem(Phaser.Physics.ARCADE);
 };
+
+function hitItem(playerAvatar, item){
+    currentPlayer.hasItem = this;
+    currentPlayer.gotItem();
+    this.removeItem();
+}
+
+
+
+
+
+
+
+
+
 
 // This is the start screen game state. To be implimented.
 var main = {

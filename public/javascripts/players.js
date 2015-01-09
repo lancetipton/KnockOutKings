@@ -22,6 +22,7 @@ function Player(persona){
     this.isDown = false;
     this.lives = 0;
     this.lastFrame = 0;
+    this.hasItem = '';
 };
 
 Player.prototype.moveLeft = function() {
@@ -170,7 +171,6 @@ Player.prototype.special2 = function() {
     };
 };
 
-
 Player.prototype.jump = function() {
     this.avatar.body.velocity.y = -300;
     this.avatar.animations.play('jump');
@@ -243,16 +243,6 @@ Player.prototype.touching = function (otherplayer){
     }
 };
 
-Player.prototype.touchingItem = function (item){
-
-    if (this.avatar.body.x  <= (item.avatar.body.x + 16) &&  item.avatar.body.x <= (this.avatar.body.x + 16)
-            && this.avatar.body.y  <= (item.avatar.body.y + 16) &&  item.avatar.body.y <= (this.avatar.body.y + 16) ) {
-        return true;
-    }
-    else {
-        return false;
-    }
-};
 
 Player.prototype.buildAnimations = function(){
     this.avatar.animations.add('stand', [0, 1, 2], 15, true);
@@ -304,16 +294,14 @@ Player.prototype.checkMovement = function(){
     };
 };
 
-Player.prototype.getItem = function(){
-    for(var i = 0; i < allItems.length; i++){
-        if(this.touchingItem(allItems[i])){
-            allItems[i].removeItem();
-        };
-    };
+Player.prototype.gotItem = function(){
+    // add code to determin what happends when a player gets an item.
+    console.log("got it");
 };
 
 
-// how to setup 2 players:
+
+// how to setup  players:
 
 var lifesPerPerson = 2;
 var player1 = new Player('guy');
@@ -321,10 +309,6 @@ player1.avatar.frame = 0
 player1.playerName = 'Player 1'
 allPlayers.push(player1);
 
-var player2 = new Player('girl');
-player2.playerName = 'Player 2'
-player2.avatar.frame = 0
-allPlayers.push(player2);
 
 
 // functions to intract with the players:
@@ -456,10 +440,13 @@ updateHud = function(player){
 function buildPlayers(){
     for(var i = 0; i < allPlayers.length; i++){
         allPlayers[i].avatar = game.add.sprite(((i + 1)* 200), game.world.height - 510, allPlayers[i].persona);
+
         game.physics.enable(allPlayers[i].avatar, Phaser.Physics.ARCADE);
         allPlayers[i].avatar.anchor.setTo(.5, 1);
         allPlayers[i].avatar.body.bounce.setTo(0, 0.1);
         allPlayers[i].avatar.body.gravity.y = 400;
+        allPlayers[i].avatar.body.width = 50;
+        allPlayers[i].avatar.body.height = 100;
         // allPlayers[i].avatar.health = 0;
         allPlayers[i].buildAnimations();
         allPlayers[i].lives = lifesPerPerson;
