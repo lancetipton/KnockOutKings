@@ -60,8 +60,6 @@ Level.prototype.build = function(){
         platform.body.width = currentLevel.platformsWidth;
         platform.body.height = currentLevel.platformsHeight;
 
-
-
     };
 
 

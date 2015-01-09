@@ -310,7 +310,6 @@ player1.playerName = 'Player 1'
 allPlayers.push(player1);
 
 
-
 // functions to intract with the players:
 
 function buildPlayerControls(player){

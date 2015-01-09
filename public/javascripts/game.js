@@ -22,6 +22,7 @@ var play = {
         buildGame();
         buildLevel(currentLevel);
         buildPlayers();
+        buildItems();
 
     },
 
@@ -44,29 +45,31 @@ var play = {
                 restartGame();
             };
 
-            for(var i = 0; i < allItems.length; i++){
-                game.physics.arcade.collide(currentPlayer.avatar, allItems[i].avatar, hitItem.bind(allItems[i]), null, this);
+            for(var i = 0; i < dropItems.length; i++){
+                game.physics.arcade.collide(currentPlayer.avatar, dropItems[i].avatar, hitItem.bind(dropItems[i]), null, this);
 
             };
 
 
         };
 
-        // check collision with items:
-        for(var i = 0; i < allItems.length; i++){
-            game.physics.arcade.collide(allItems[i].avatar, platforms);
+
+
+
+
+        for(var i = 0; i < dropItems.length; i++){
+            allowItem = Math.floor(Math.random() * 10)
+            game.physics.arcade.collide(dropItems[i].avatar, platforms);
+
+            if(allowItem < 2){
+                itemToDrop = dropItems[Math.floor(Math.random() * dropItems.length)]
+                dropAnItem(itemToDrop);
+            };
+
         };
-
-        allowItem = Math.floor(Math.random() * 100)
-
-        if(allowItem < 2){
-            buildNewItem()
-        };
-
-
-
 
     }
+
 };
 
 function buildGame(){
@@ -76,7 +79,9 @@ function buildGame(){
 function hitItem(playerAvatar, item){
     currentPlayer.hasItem = this;
     currentPlayer.gotItem();
-    this.removeItem();
+    this.avatar.kill();
+    this.resetItem();
+    // reset the obeject to the top of the page
 }
 
 
