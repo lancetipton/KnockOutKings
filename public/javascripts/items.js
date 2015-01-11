@@ -32,6 +32,7 @@ Item.prototype.resetItem = function(){
     setTimeout(function(){
 
         item.avatar.body.gravity = false;
+        item.avatar.body.y = 0;
         item.avatar.revive();
 
     }, 1000);

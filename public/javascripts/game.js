@@ -2,96 +2,42 @@
 var play = {
 
     preload: function() {
+        // we will change this in the future to change the levels:
+        currentLevel = space;
+
         // load images for the level:
         game.load.image(currentLevel.name, currentLevel.backgroundLoad);
         game.load.image('platform', currentLevel.groundLoad);
-
-
-        // load images for the items:
-        game.load.spritesheet('star', 'public/images/star.png', 24, 22);
-        game.load.spritesheet('health', 'public/images/health.png', 32, 32);
 
         game.load.spritesheet('guy', 'public/images/guy.png', 80, 108);
         game.load.spritesheet('girl', 'public/images/girl.png', 80, 108);
     },
 
     // this is the very first fucntion that is run, and sets up our game:
-
     create: function() {
+        game.physics.startSystem(Phaser.Physics.ARCADE);
 
-        buildGame();
-        buildLevel(currentLevel);
-        buildPlayers();
-        buildItems();
+        buildLevel(space);
+        buildPlayers(player);
 
+        // this will go into out start screen when we have one:
     },
 
     // this is the game loop that will run over and over again. About 60 FPS.
     update: function() {
-        // gets the current level from the levels.js
+            checkFace(player);
+            game.physics.arcade.collide(player.avatar, platforms);
 
-        for(var i = 0; i < allPlayers.length; i++){
-            currentPlayer = allPlayers[i];
-            checkFace(currentPlayer);
-
-            game.physics.arcade.collide(currentPlayer.avatar, platforms);
-
-            if (currentPlayer.hurt == false){
-                currentPlayer.falling();
-                currentPlayer.checkMovement();
+            if (player.hurt == false){
+                player.checkMovement();
             };
 
-            if(currentPlayer.playerDead(currentLevel)){
+            if(player.playerDead(currentLevel)){
                 restartGame();
             };
-
-            for(var i = 0; i < dropItems.length; i++){
-                game.physics.arcade.collide(currentPlayer.avatar, dropItems[i].avatar, hitItem.bind(dropItems[i]), null, this);
-
-            };
-
-
-        };
-
-
-
-
-
-        for(var i = 0; i < dropItems.length; i++){
-            allowItem = Math.floor(Math.random() * 10)
-            game.physics.arcade.collide(dropItems[i].avatar, platforms);
-
-            if(allowItem < 2){
-                itemToDrop = dropItems[Math.floor(Math.random() * dropItems.length)]
-                dropAnItem(itemToDrop);
-            };
-
-        };
-
     }
 
 };
-
-function buildGame(){
-    game.physics.startSystem(Phaser.Physics.ARCADE);
-};
-
-function hitItem(playerAvatar, item){
-    currentPlayer.hasItem = this;
-    currentPlayer.gotItem();
-    this.avatar.kill();
-    this.resetItem();
-    // reset the obeject to the top of the page
-}
-
-
-
-
-
-
-
-
-
 
 // This is the start screen game state. To be implimented.
 var main = {
@@ -101,6 +47,7 @@ var main = {
   },
 
   create: function() {
+    tellServerToAddPlayer();
 
     // View the play button on the screen:
     var playBtn = game.add.sprite(300, game.world.centerY, 'play');
@@ -112,99 +59,31 @@ var main = {
     // When we click on the button, it will do the below. playGame is the function it will run when clicked.
     // game.input.onDown.addOnce(playGame, this);
     playBtn.events.onInputDown.add(playGame, this);
-
-
   },
 };
 
 // this function will run when the playBtn it clicked:
 function playGame () {
-    // This starts the game state play. Which is the actuall game:
-    game.state.start('levelSelect');
+
+tellServerToStartGame();
+
 };
 
 
-var avatarSelect = {
-  preload: function() {
 
-  },
-
-  create: function() {
-
-  },
-
-  update: function(){
-
-  }
-};
-
-var levelSelect = {
-  preload: function() {
-    game.load.image('spaceLevel', 'public/images/gui/space.png');
-    game.load.image('rooftopLevel', 'public/images/gui/rooftopBtn.png');
-
-  },
-
-  create: function() {
-    var spaceLevelBtn = game.add.sprite(80, 50, 'spaceLevel');
-    var rooftopLevelBtn = game.add.sprite(520, 50, 'rooftopLevel');
-
-    spaceLevelBtn.inputEnabled = true;
-    rooftopLevelBtn.inputEnabled = true;
-
-    spaceLevelBtn.events.onInputDown.add(selectSpace, this);
-    rooftopLevelBtn.events.onInputDown.add(selectrRooftop, this);
-
-  },
-
-  update: function(){
-
-  }
-};
-
-var results = {
-  preload: function() {
-
-  },
-
-  create: function() {
-
-  },
-
-  update: function(){
-
-  }
-};
-
-
-function selectSpace (){
-    currentLevel = space;
-    game.state.start('play');
-};
-
-function selectrRooftop (){
-    currentLevel = rooftop;
-    game.state.start('play');
-};
+// this creates out new Game:
+var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', 'gameDiv')
 
 
 // State manager:
-var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', 'gameDiv')
+// here we will add new states ass we create them:
 
 game.state.add('main', main);
-game.state.add('avatarSelect', avatarSelect);
-game.state.add('levelSelect', levelSelect);
-game.state.add('play', play);
-game.state.add('results', results);
+// game.state.add('avatarSelect', avatarSelect);
+// game.state.add('levelSelect', levelSelect);
+// game.state.add('results', results);
 
+game.state.add('play', play);
 
 // This is used to start a game state:
 game.state.start('main');
-
-
-
-
-
-
-
-

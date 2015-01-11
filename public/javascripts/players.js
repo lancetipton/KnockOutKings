@@ -57,14 +57,17 @@ Player.prototype.punch = function() {
         this.avatar.animations.play('punch');
     }
 
+
+
     var player = this;
 
     for(var i = 0; i < allPlayers.length; i++){
 
         if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
             allPlayers[i].hurt = true;
-           attackPlayer(this, allPlayers[i]);
+            attackPlayer(this, allPlayers[i]);
         };
+
     };
 };
 
@@ -233,7 +236,6 @@ Player.prototype.resetVelocity = function (){
 };
 
 Player.prototype.touching = function (otherplayer){
-
     if (this.avatar.body.x  <= (otherplayer.avatar.body.x + 64) &&  otherplayer.avatar.body.x <= (this.avatar.body.x + 64)
             && this.avatar.body.y  <= (otherplayer.avatar.body.y + 64) &&  otherplayer.avatar.body.y <= (this.avatar.body.y + 64) ) {
         return true;
@@ -267,6 +269,9 @@ Player.prototype.falling = function(){
 };
 
 Player.prototype.checkMovement = function(){
+
+    this.falling();
+
     if (this.allKeysUp() && this.hurt == false){
         this.resetVelocity(this);
         this.avatar.frame = 0
@@ -300,20 +305,7 @@ Player.prototype.gotItem = function(){
 };
 
 
-
-// how to setup  players:
-
-var lifesPerPerson = 2;
-var player1 = new Player('guy');
-player1.avatar.frame = 0
-player1.playerName = 'Player 1'
-allPlayers.push(player1);
-
-
-// functions to intract with the players:
-
 function buildPlayerControls(player){
-    if (player.playerName == 'Player 1'){
       Player.prototype.keyLeft = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
       Player.prototype.keyRight = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
       Player.prototype.keyJump = game.input.keyboard.addKey(Phaser.Keyboard.UP);
@@ -322,18 +314,6 @@ function buildPlayerControls(player){
       Player.prototype.keyKick = game.input.keyboard.addKey(Phaser.Keyboard.M);
       Player.prototype.keySuperKick = game.input.keyboard.addKey(Phaser.Keyboard.N);
       Player.prototype.keySuperPunch = game.input.keyboard.addKey(Phaser.Keyboard.L);
-    }
-    // sets player 2 controls for now, but will be changed to be mre dynamic
-    else {
-      player.keyLeft = game.input.keyboard.addKey(Phaser.Keyboard.A);
-      player.keyRight = game.input.keyboard.addKey(Phaser.Keyboard.D);
-      player.keyJump = game.input.keyboard.addKey(Phaser.Keyboard.W);
-      player.keyDown = game.input.keyboard.addKey(Phaser.Keyboard.S);
-      player.keyPunch = game.input.keyboard.addKey(Phaser.Keyboard.F);
-      player.keyKick = game.input.keyboard.addKey(Phaser.Keyboard.G);
-      player.keySuperKick = game.input.keyboard.addKey(Phaser.Keyboard.R);
-      player.keySuperPunch = game.input.keyboard.addKey(Phaser.Keyboard.T);
-    };
 };
 
 function buildHud(player){
@@ -366,29 +346,29 @@ jumpCheck = function(){
 // this. is bound to the fucntion call, to make it the current player:
 
 moveLeft = function(){
-    this.moveLeft();
+    tellServerToMove('left');
 };
 moveRight = function(){
-    this.moveRight();
+    tellServerToMove('right');
 };
 
 down = function(){
-    this.down();
+    tellServerToMove('down');
 };
 
 kick = function(){
-    this.kick();
+    tellServerToAttack('kick');
 };
 
 punch = function(){
-    this.punch();
+    tellServerToAttack('punch');
 };
 
 superKick = function(){
-    this.superKick();
+  tellServerToAttack('superKick');
 };
 superPunch = function(){
-    this.superPunch();
+    tellServerToAttack('superKick');
 }
 
 attackPlayer = function(attackingPlayer, hurtPlayer){
@@ -436,28 +416,22 @@ updateHud = function(player){
 }
 
 
-function buildPlayers(){
-    for(var i = 0; i < allPlayers.length; i++){
-        allPlayers[i].avatar = game.add.sprite(((i + 1)* 200), game.world.height - 510, allPlayers[i].persona);
+function buildPlayers(player){
+        player.avatar = game.add.sprite(200, game.world.height - 510, player.persona);
 
-        game.physics.enable(allPlayers[i].avatar, Phaser.Physics.ARCADE);
-        allPlayers[i].avatar.anchor.setTo(.5, 1);
-        allPlayers[i].avatar.body.bounce.setTo(0, 0.1);
-        allPlayers[i].avatar.body.gravity.y = 400;
-        allPlayers[i].avatar.body.width = 50;
-        allPlayers[i].avatar.body.height = 100;
-        // allPlayers[i].avatar.health = 0;
-        allPlayers[i].buildAnimations();
-        allPlayers[i].lives = lifesPerPerson;
-
-        if(i%2 != 0){
-            allPlayers[i].isLeft = true;
-        }
-
-        buildHud(allPlayers[i]);
-        buildPlayerControls(allPlayers[i]);
-    };
+        game.physics.enable(player.avatar, Phaser.Physics.ARCADE);
+        player.avatar.anchor.setTo(.5, 1);
+        player.avatar.body.bounce.setTo(0, 0.1);
+        player.avatar.body.gravity.y = 400;
+        player.avatar.body.width = 50;
+        player.avatar.body.height = 100;
+        player.buildAnimations();
+        player.lives = lifesPerPerson;
+        buildHud(player);
+        buildPlayerControls(player);
 };
+
+
 
 function restartGame() {
     for(var i = 0; i< allPlayers.length; i++){
@@ -465,3 +439,10 @@ function restartGame() {
         game.state.start(game.state.current);
     }
 };
+
+
+// how to setup  players:
+lifesPerPerson = 2;
+player = new Player('guy');
+player.avatar.frame = 0
+allPlayers.push(player);
