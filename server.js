@@ -45,6 +45,11 @@ io.on('connection', function(socket){
     io.emit('gameStarted', '');
   });
 
+  socket.on('restartGame', function(){
+    io.emit('restartGame', '');
+  });
+
+
   // client disconnects from server
   socket.on('disconnect', function() {
     console.log("someone disconnected");

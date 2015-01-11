@@ -62,14 +62,7 @@ Player.prototype.punch = function() {
     }
 
     var player = this;
-
-    for(var i = 0; i < allPlayers.length; i++){
-
-        if(player.id != allPlayers[i].id && player.touching(allPlayers[i])){
-            tellServerPlayerIsHurt([player.id, allPlayers[i].id])
-        };
-
-    };
+    checkIfPlayerIsHurt(player);
 };
 
 Player.prototype.kick = function() {
@@ -90,13 +83,7 @@ Player.prototype.kick = function() {
     };
 
     var player = this;
-    for(var i = 0; i < allPlayers.length; i++){
-
-    if(player.id != allPlayers[i].id && this.touching(allPlayers[i])){
-            allPlayers[i].hurt = true;
-            attackPlayer(this, allPlayers[i]);
-        };
-    };
+    checkIfPlayerIsHurt(player);
 };
 
 
@@ -105,15 +92,7 @@ Player.prototype.superKick = function() {
         this.attackPercent = this.attacks['superKick'];
         this.avatar.animations.play('superKick');
         var player = this;
-
-        for(var i = 0; i < allPlayers.length; i++){
-
-            if(player.id != allPlayers[i].id && this.touching(allPlayers[i])){
-                allPlayers[i].hurt = true;
-               attackPlayer(this, allPlayers[i]);
-
-            };
-        };
+        checkIfPlayerIsHurt(player);
     };
 };
 
@@ -123,14 +102,7 @@ Player.prototype.superPunch = function() {
         this.attackPercent = this.attacks['superPunch'];
         this.avatar.animations.play('superPunch');
         var player = this;
-
-        for(var i = 0; i < allPlayers.length; i++){
-
-            if(player.id != allPlayers[i].id && this.touching(allPlayers[i])){
-                allPlayers[i].hurt = true;
-               attackPlayer(this, allPlayers[i]);
-            };
-        };
+        checkIfPlayerIsHurt(player);
     };
 };
 
@@ -140,18 +112,8 @@ Player.prototype.special1 = function() {
         this.attackPercent = this.attacks['special1'];
         this.avatar.animations.play('special1');
         var player = this;
-
-
         setTimeout(function() {
-            for(var i = 0; i < allPlayers.length; i++){
-
-                if(player.id != allPlayers[i].id && player.touching(allPlayers[i])){
-                    allPlayers[i].hurt = true;
-                   attackPlayer(player, allPlayers[i]);
-                };
-
-            };
-
+            checkIfPlayerIsHurt(player);
         },500);
 
     };
@@ -163,15 +125,9 @@ Player.prototype.special2 = function() {
         this.attackPercent = this.attacks['special2'];
         this.avatar.animations.play('special2');
         var player = this;
-
-        for(var i = 0; i < allPlayers.length; i++){
-
-            if(player.id != allPlayers[i].id && this.touching(allPlayers[i])){
-                allPlayers[i].hurt = true;
-               attackPlayer(this, allPlayers[i]);
-
-            };
-        };
+        setTimeout(function() {
+            checkIfPlayerIsHurt(player);
+        },500);
     };
 };
 
@@ -285,18 +241,18 @@ Player.prototype.checkMovement = function(){
         this.special2();
     }
     else{
-        this.keyLeft.onDown.add(moveLeft.bind(this), this);
-        this.keyRight.onDown.add(moveRight.bind(this), this);
-        this.keyDown.onDown.add(down.bind(this), this);
-        this.keySuperKick.onDown.add(superKick.bind(this), this);
-        this.keySuperPunch.onDown.add(superPunch.bind(this), this);
-        this.keyPunch.onDown.add(punch.bind(this), this);
-        this.keyKick.onDown.add(kick.bind(this), this);
+        this.keyLeft.onDown.addOnce(moveLeft.bind(this), this);
+        this.keyRight.onDown.addOnce(moveRight.bind(this), this);
+        this.keyDown.onDown.addOnce(down.bind(this), this);
+        this.keySuperKick.onDown.addOnce(superKick.bind(this), this);
+        this.keySuperPunch.onDown.addOnce(superPunch.bind(this), this);
+        this.keyPunch.onDown.addOnce(punch.bind(this), this);
+        this.keyKick.onDown.addOnce(kick.bind(this), this);
     };
 
     if(this.keyJump.isDown){
         this.isJumping = true;
-        this.keyJump.onDown.add(jumpCheck.bind(this), this);
+        this.keyJump.onDown.addOnce(jumpCheck.bind(this), this);
     };
 };
 
@@ -342,6 +298,14 @@ jumpCheck = function(){
         };
     };
 
+};
+
+checkIfPlayerIsHurt = function(player){
+    for(var i = 0; i < allPlayers.length; i++){
+        if(player.id != allPlayers[i].id && player.touching(allPlayers[i])){
+            tellServerPlayerIsHurt([player.id, allPlayers[i].id])
+        };
+    };
 };
 
 // These are called from the update function in game.js
@@ -441,13 +405,6 @@ function buildPlayers(){
 };
 
 
-
-function restartGame() {
-    for(var i = 0; i< allPlayers.length; i++){
-        allPlayers[i].lives = lifesPerPerson;
-        game.state.start(game.state.current);
-    }
-};
 
 
 // how to setup  players:

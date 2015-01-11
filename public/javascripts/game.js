@@ -27,6 +27,7 @@ var play = {
     // this is the game loop that will run over and over again. About 60 FPS.
     update: function() {
 
+
         for(var i = 0; i < allPlayers.length; i ++){
             player = allPlayers[i];
 
@@ -97,3 +98,8 @@ game.state.add('play', play);
 
 // This is used to start a game state:
 game.state.start('main');
+
+
+function restartGame() {
+    tellServerToRestartGame();
+};

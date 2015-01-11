@@ -13,6 +13,9 @@ tellServerToStartGame = function(){
   socket.emit('startGame', '');
 };
 
+tellServerToRestartGame = function(){
+  socket.emit('restartGame', '');
+}
 
 
 // player Actions:
@@ -144,6 +147,7 @@ socket.on('gameStarted', function(playerName){
   game.state.start('play');
 })
 
+
 buildAPlayer = function(playerId){
   console.log('player built');
   player = new Player('guy');
@@ -186,13 +190,24 @@ findPlayer = function(playerId){
   };
 };
 
-
+// new method ofr arrays to see if the array contains an object.
 Array.prototype.contains = function(obj) {
-    var i = this.length;
-    while (i--) {
-        if (this[i] === obj) {
-            return true;
-        }
-    }
-    return false;
+  var i = this.length;
+  while (i--) {
+      if (this[i] === obj) {
+          return true;
+      };
+  };
+  return false;
 }
+
+socket.on('restartGame', function(playerName){
+
+    for(var i = 0; i< allPlayers.length; i++){
+        allPlayers[i].lives = lifesPerPerson;
+
+    };
+    game.state.start(game.state.current);
+});
+
+
