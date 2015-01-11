@@ -4,8 +4,10 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 
-var playerList = ['player1', 'player2', 'player3', 'player4'];
-var playerNumber = 0;
+var playerSockets = [];
+var otherPlayerIds = [];
+var idCount = 0;
+
 
 
 // Set directorys for the server to see:
@@ -25,38 +27,49 @@ app.get('/', function(req, res){
 // Server gets messages from client:
 io.on('connection', function(socket){
   console.log("New Player Connected!");
+  playerSockets.push(socket);
+  addAnId(socket);
+
+
+  socket.on('checkForOtherPlayers', function(){
+    console.log(otherPlayerIds);
+    io.emit('otherPlayers', JSON.stringify(otherPlayerIds));
+  });
+
+  socket.on('addPlayer', function(){
+    var playerId = findPlayerId(socket);
+    io.emit('playerAdded', playerId);
+  });
+
+  socket.on('startGame', function(){
+    io.emit('gameStarted', '');
+  });
+
+  // client disconnects from server
+  socket.on('disconnect', function() {
+    console.log("someone disconnected");
+    var playerId = findPlayerId(socket);
+    io.emit('removePlayer', playerId);
+    removePlayer(socket);
+
+  });
+
+
 
   // server call to move player:
-    socket.on('movement', function(direction){
-      io.emit('movement', direction);
+    socket.on('movement', function(playerAndDirection){
+      io.emit('movement', playerAndDirection);
     });
 
     socket.on('attack', function(attack){
       io.emit('attack', attack);
     });
 
-
-    socket.on('addPlayer', function(){
-      playerName = playerList[playerNumber];
-      io.emit('playerAdded', playerName);
-      playerNumber ++;
-    });
-
-    socket.on('startGame', function(){
-      io.emit('gameStarted', '');
+    socket.on('hurt', function(players){
+      io.emit('hurt', players)
     });
 
 
-
-
-
-
-    // client disconnects from server
-    socket.on('disconnect', function() {
-      playerNumber -= 1;
-      console.log(playerNumber);
-      checkNegitive();
-    });
 
 });
 
@@ -66,9 +79,27 @@ http.listen(8080, function(){
 });
 
 
-checkNegitive = function(){
-  if (playerNumber < 0){
-    playerNumber = 0;
-    console.log('Resetting number of players to 0!')
+
+var removePlayer = function(socket){
+  for(var i = 0; i < playerSockets.length; i++){
+    if (playerSockets[i] == socket){
+      playerSockets.splice(i, 1);
+      otherPlayerIds.splice(i, 1);
+      idCount --;
+    };
   };
-};
+ };
+
+
+var findPlayerId = function(socket){
+    for(var i = 0; i < playerSockets.length; i++){
+      if (playerSockets[i] == socket){
+          return i;
+      };
+    };
+ };
+
+ var  addAnId = function(socket){
+      otherPlayerIds.push(idCount);
+      idCount ++;
+ };

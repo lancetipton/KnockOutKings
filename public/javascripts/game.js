@@ -1,3 +1,5 @@
+
+
 //  Play game state. Where the action happends.
 var play = {
 
@@ -18,23 +20,27 @@ var play = {
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
         buildLevel(space);
-        buildPlayers(player);
-
-        // this will go into out start screen when we have one:
+        buildPlayers();
+        localPlayer = allPlayers[0];
     },
 
     // this is the game loop that will run over and over again. About 60 FPS.
     update: function() {
-            checkFace(player);
+
+        for(var i = 0; i < allPlayers.length; i ++){
+            player = allPlayers[i];
+
+            checkFace(localPlayer);
             game.physics.arcade.collide(player.avatar, platforms);
 
-            if (player.hurt == false){
-                player.checkMovement();
+            if (localPlayer.hurt == false){
+                localPlayer.checkMovement();
             };
 
-            if(player.playerDead(currentLevel)){
+            if(localPlayer.playerDead(currentLevel)){
                 restartGame();
             };
+        };
     }
 
 };
@@ -47,8 +53,12 @@ var main = {
   },
 
   create: function() {
+    console.log('menu');
     tellServerToAddPlayer();
 
+
+
+    checkServerForOthers();
     // View the play button on the screen:
     var playBtn = game.add.sprite(300, game.world.centerY, 'play');
 

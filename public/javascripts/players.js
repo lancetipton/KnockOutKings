@@ -1,14 +1,16 @@
 allPersonas = ['mike', 'tara', 'mario', 'fatty']
 
 allPlayers = [];
+newPlayers = [];
+allPlayersIds = [];
 
 // set huds for the players. this needs to be done better.
 // this sets the default posision, then uses it to set the posisiton of the hud for the player.
 var hudPosX = 16;
 var hudPosY = 16;
 
-function Player(persona){
-    this.playerName = '';
+function Player(persona, posX, posY){
+    this.id = '';
     this.percent = 1;
     this.isLeft = false;
     this.persona = persona;
@@ -23,6 +25,8 @@ function Player(persona){
     this.lives = 0;
     this.lastFrame = 0;
     this.hasItem = '';
+    this.posX = 0;
+    this.posY = 0;
 };
 
 Player.prototype.moveLeft = function() {
@@ -57,15 +61,12 @@ Player.prototype.punch = function() {
         this.avatar.animations.play('punch');
     }
 
-
-
     var player = this;
 
     for(var i = 0; i < allPlayers.length; i++){
 
-        if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
-            allPlayers[i].hurt = true;
-            attackPlayer(this, allPlayers[i]);
+        if(player.id != allPlayers[i].id && player.touching(allPlayers[i])){
+            tellServerPlayerIsHurt([player.id, allPlayers[i].id])
         };
 
     };
@@ -91,7 +92,7 @@ Player.prototype.kick = function() {
     var player = this;
     for(var i = 0; i < allPlayers.length; i++){
 
-    if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
+    if(player.id != allPlayers[i].id && this.touching(allPlayers[i])){
             allPlayers[i].hurt = true;
             attackPlayer(this, allPlayers[i]);
         };
@@ -107,7 +108,7 @@ Player.prototype.superKick = function() {
 
         for(var i = 0; i < allPlayers.length; i++){
 
-            if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
+            if(player.id != allPlayers[i].id && this.touching(allPlayers[i])){
                 allPlayers[i].hurt = true;
                attackPlayer(this, allPlayers[i]);
 
@@ -125,7 +126,7 @@ Player.prototype.superPunch = function() {
 
         for(var i = 0; i < allPlayers.length; i++){
 
-            if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
+            if(player.id != allPlayers[i].id && this.touching(allPlayers[i])){
                 allPlayers[i].hurt = true;
                attackPlayer(this, allPlayers[i]);
             };
@@ -144,7 +145,7 @@ Player.prototype.special1 = function() {
         setTimeout(function() {
             for(var i = 0; i < allPlayers.length; i++){
 
-                if(player.playerName != allPlayers[i].playerName && player.touching(allPlayers[i])){
+                if(player.id != allPlayers[i].id && player.touching(allPlayers[i])){
                     allPlayers[i].hurt = true;
                    attackPlayer(player, allPlayers[i]);
                 };
@@ -165,7 +166,7 @@ Player.prototype.special2 = function() {
 
         for(var i = 0; i < allPlayers.length; i++){
 
-            if(player.playerName != allPlayers[i].playerName && this.touching(allPlayers[i])){
+            if(player.id != allPlayers[i].id && this.touching(allPlayers[i])){
                 allPlayers[i].hurt = true;
                attackPlayer(this, allPlayers[i]);
 
@@ -201,7 +202,7 @@ Player.prototype.playerDead = function(level){
             this.avatar.kill();
             this.percent = 0;
             this.lives -= 1;
-            this.hud.text = this.playerName + ": " + 0 + "  Lives: "  + this.lives;
+            this.hud.text = this.id + ": " + 0 + "  Lives: "  + this.lives;
             this.avatar.allowGravity = false;
             this.resetVelocity();
             this.avatar.revive();
@@ -317,7 +318,7 @@ function buildPlayerControls(player){
 };
 
 function buildHud(player){
-    player.hud = game.add.text(hudPosX, hudPosY, player.playerName + ': 0  Lives: ' + player.lives, { fontSize: '12px', fill: '#000' });
+    player.hud = game.add.text(hudPosX, hudPosY, player.id + ': 0  Lives: ' + player.lives, { fontSize: '12px', fill: '#000' });
     hudPosX += 250;
 }
 
@@ -334,7 +335,8 @@ function checkFace(player){
 jumpCheck = function(){
     if(this.isJumping){
         if (this.jumpCount < 2){
-            this.jump();
+            tellServerToMove([this.id, 'jump']);
+            // this.jump();
             this.jumpCount ++;
             this.isJumping = false;
         };
@@ -346,29 +348,29 @@ jumpCheck = function(){
 // this. is bound to the fucntion call, to make it the current player:
 
 moveLeft = function(){
-    tellServerToMove('left');
+    tellServerToMove([this.id, 'left']);
 };
 moveRight = function(){
-    tellServerToMove('right');
+    tellServerToMove([this.id, 'right']);
 };
 
 down = function(){
-    tellServerToMove('down');
+    tellServerToMove([this.id, 'down']);
 };
 
 kick = function(){
-    tellServerToAttack('kick');
+    tellServerToAttack([this.id, 'kick']);
 };
 
 punch = function(){
-    tellServerToAttack('punch');
+    tellServerToAttack([this.id, 'punch']);
 };
 
 superKick = function(){
-  tellServerToAttack('superKick');
+  tellServerToAttack([this.id, 'superKick']);
 };
 superPunch = function(){
-    tellServerToAttack('superKick');
+    tellServerToAttack([this.id, 'superPunch']);
 }
 
 attackPlayer = function(attackingPlayer, hurtPlayer){
@@ -411,14 +413,19 @@ hurtWaitTimeout = function(hurtPlayer){
 }
 
 updateHud = function(player){
-    player.hud.text = player.playerName + ": " + Math.round(player.percent)  + "  Lives: "  + player.lives;
+    player.hud.text = player.id + ": " + Math.round(player.percent)  + "  Lives: "  + player.lives;
 
 }
 
+// temp to posisiton the players:
+x = 200
 
-function buildPlayers(player){
-        player.avatar = game.add.sprite(200, game.world.height - 510, player.persona);
+function buildPlayers(){
 
+    for(var i = 0; i < allPlayers.length; i++ ){
+        player = allPlayers[i];
+        player.avatar = game.add.sprite(player.posX, player.posY, player.persona);
+        x += 200;
         game.physics.enable(player.avatar, Phaser.Physics.ARCADE);
         player.avatar.anchor.setTo(.5, 1);
         player.avatar.body.bounce.setTo(0, 0.1);
@@ -429,6 +436,8 @@ function buildPlayers(player){
         player.lives = lifesPerPerson;
         buildHud(player);
         buildPlayerControls(player);
+    };
+
 };
 
 
@@ -443,6 +452,3 @@ function restartGame() {
 
 // how to setup  players:
 lifesPerPerson = 2;
-player = new Player('guy');
-player.avatar.frame = 0
-allPlayers.push(player);
